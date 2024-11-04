@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Vocal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .chat-container {
+            text-align: center;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        #speak-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #speak-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Chatbot Vocal</h1>
+        <button id="speak-button">Parler</button>
+    </div>
+
+    <script>
+        const speakButton = document.getElementById('speak-button');
+        let conversationStep = 0;
+
+        if (!('speechSynthesis' in window) || !('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+            alert("Votre navigateur ne prend pas en charge la synthèse ou la reconnaissance vocale.");
+        }
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        function speakText(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            speechSynthesis.speak(utterance);
+        }
+
+        function startConversation() {
+            if (conversationStep === 0) {
+                speakText("Bonjour, comment vas-tu ?");
+                conversationStep++;
+            }
+        }
+
+        recognition.onresult = (event) => {
+            const userInput = event.results[0][0].transcript.toLowerCase();
+            console.log("Texte reconnu :", userInput);
+
+            if (conversationStep === 1 && userInput.includes("oui")) {
+                speakText("Ok, fais-tu analyser un match ?");
+                conversationStep++;
+            } else if (conversationStep === 2 && userInput.includes("oui")) {
+                speakText("Donne-moi la cote de l'équipe à domicile.");
+                conversationStep++;
+            } else if (conversationStep === 3) {
+                localStorage.setItem("cote_domicile", userInput);
+                speakText("Merci. Donne-moi la cote du match nul.");
+                conversationStep++;
+            } else if (conversationStep === 4) {
+                localStorage.setItem("cote_nul", userInput);
+                speakText("Merci. Donne-moi la cote de l'équipe extérieure.");
+                conversationStep++;
+            } else if (conversationStep === 5) {
+                localStorage.setItem("cote_exterieure", userInput);
+                analyzeCotes();
+                conversationStep++;
+            } else {
+                speakText("Désolé, je n'ai pas compris. Veuillez répondre par oui ou non.");
+            }
+        };
+
+        function analyzeCotes() {
+            const coteDomicile = parseFloat(localStorage.getItem("cote_domicile"));
+            const coteNul = parseFloat(localStorage.getItem("cote_nul"));
+            const coteExterieure = parseFloat(localStorage.getItem("cote_exterieure"));
+
+            let bestOption;
+            if (coteDomicile < coteNul && coteDomicile < coteExterieure) {
+                bestOption = "Victoire de l'équipe à domicile";
+            } else if (coteExterieure < coteDomicile && coteExterieure < coteNul) {
+                bestOption = "Victoire de l'équipe extérieure";
+            } else {
+                bestOption = "Match nul";
+            }
+
+            speakText(`L'option la plus fiable semble être: ${bestOption}`);
+        }
+
+        speakButton.addEventListener('click', () => {
+            recognition.start();
+        });
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Erreur de reconnaissance vocale :", event.error);
+            speakText(`Erreur de reconnaissance vocale : ${event.error}`);
+        };
+
+        startConversation();
+    </script>
+</body>
+</html>
