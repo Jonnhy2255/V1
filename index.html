@@ -71,17 +71,6 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // Récupération du nom mémorisé (si disponible)
-        let userName = localStorage.getItem('userName') || '';
-
-        // Fonction pour extraire un nom d'une phrase
-        function extractName(phrase) {
-            const regex = /\b(?:je m'appelle|mon nom est|je me nomme)\s+([a-zA-Zéèêàù]+)\b/;
-            const match = phrase.match(regex);
-            if (match) return match[1];
-            return ''; // Si aucun nom n'est trouvé
-        }
-
         // Événement pour commencer la reconnaissance vocale
         speakButton.addEventListener('click', () => {
             console.log("Bouton cliqué, démarrage de la reconnaissance vocale.");
@@ -95,31 +84,36 @@
 
             // Vérifier si l'utilisateur a salué
             if (userInput.includes("bonjour") || userInput.includes("salut") || userInput.includes("hé")) {
-                const botResponse = userName ? `Salut, ${userName}! Puis-je avoir ton nom ?` : "Salut, puis-je avoir ton nom ?";
+                const botResponse = "Salut, je suis Véronica, ton assistant en analyse sportive.";
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
-                recognition.stop();  // Arrêter la reconnaissance après la salutation
-                recognition.start(); // Redémarrer pour la collecte du nom de l'utilisateur
             }
 
-            // Vérifier si l'utilisateur a donné son nom
-            else if (userInput.includes("je m'appelle") || userInput.includes("mon nom est") || userInput.includes("je me nomme")) {
-                const name = extractName(userInput);
-                if (name) {
-                    userName = name;
-                    localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
-                    const botResponse = `Salut, ${userName}! Moi c'est Véronica, ton assistant en paris sportifs. (2s) Veux-tu débuter une analyse ?`;
+            // Vérifier si l'utilisateur demande si le bot peut analyser un match
+            else if (userInput.includes("peux-tu analyser un match") || userInput.includes("analyser un match") || userInput.includes("analyser un événement")) {
+                const botResponse = "Bien sûr, je suis là pour ça. Veuillez me donner le nom des deux équipes, par exemple : Manchester City contre Brentford ou Manchester City vs Brentford.";
+                console.log("Réponse générée :", botResponse);
+                speakText(botResponse);
+            }
+
+            // Vérifier si l'utilisateur donne un match à analyser
+            else if (userInput.includes("contre") || userInput.includes("vs")) {
+                // Extraire les équipes de la phrase
+                const teams = userInput.split(/contre|vs/).map(team => team.trim()).filter(team => team);
+                if (teams.length === 2) {
+                    const botResponse = `D'accord, je vais analyser le match entre ${teams[0]} et ${teams[1]}.`;
                     console.log("Réponse générée :", botResponse);
                     speakText(botResponse);
                 } else {
-                    speakText("Désolé, je n'ai pas bien compris ton nom. Peux-tu le répéter ?");
+                    const botResponse = "Désolé, je n'ai pas bien compris. Peux-tu préciser les deux équipes ? Par exemple : Manchester City contre Brentford.";
+                    console.log("Réponse générée :", botResponse);
+                    speakText(botResponse);
                 }
             }
-            // Vérifier si l'utilisateur a simplement dit un nom
+
+            // Vérifier si l'utilisateur donne un autre message
             else if (userInput) {
-                userName = userInput.split(" ")[0];  // Suppose que le nom est le premier mot dit
-                localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
-                const botResponse = `Salut, ${userName}! Moi c'est Véronica, ton assistant en paris sportifs. (2s) Veux-tu débuter une analyse ?`;
+                const botResponse = "Désolé, je n'ai pas compris. Tu veux analyser un match ?";
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
             }
