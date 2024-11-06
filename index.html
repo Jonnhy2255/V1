@@ -95,7 +95,7 @@
 
             // Vérifier si l'utilisateur a salué
             if (userInput.includes("bonjour") || userInput.includes("salut") || userInput.includes("hé")) {
-                const botResponse = userName ? `Salut, ${userName}!` : "Bonjour, comment t'appelles-tu ?";
+                const botResponse = userName ? `Salut, ${userName}! Puis-je avoir ton nom ?` : "Salut, puis-je avoir ton nom ?";
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
                 recognition.stop();  // Arrêter la reconnaissance après la salutation
@@ -108,7 +108,7 @@
                 if (name) {
                     userName = name;
                     localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
-                    const botResponse = `Enchanté, ${userName}!`;
+                    const botResponse = `Salut, ${userName}! Moi c'est Véronica, ton assistant en paris sportifs. (2s) Veux-tu débuter une analyse ?`;
                     console.log("Réponse générée :", botResponse);
                     speakText(botResponse);
                 } else {
@@ -119,7 +119,7 @@
             else if (userInput) {
                 userName = userInput.split(" ")[0];  // Suppose que le nom est le premier mot dit
                 localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
-                const botResponse = `Enchanté, ${userName}!`;
+                const botResponse = `Salut, ${userName}! Moi c'est Véronica, ton assistant en paris sportifs. (2s) Veux-tu débuter une analyse ?`;
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
             }
