@@ -71,13 +71,16 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // Ne rien dire au chargement, attendre une salutation de l'utilisateur
-        window.addEventListener('load', () => {
-            // Pas de texte à dire au chargement de la page
-        });
+        // Récupération du nom mémorisé (si disponible)
+        let userName = localStorage.getItem('userName') || '';
 
-        // Variable pour stocker le nom de l'utilisateur
-        let userName = '';
+        // Fonction pour extraire un nom d'une phrase
+        function extractName(phrase) {
+            const regex = /\b(?:je m'appelle|mon nom est|je me nomme)\s+([a-zA-Zéèêàù]+)\b/;
+            const match = phrase.match(regex);
+            if (match) return match[1];
+            return phrase.split(" ")[0];  // Si aucun match, prendre le premier mot
+        }
 
         // Événement pour commencer la reconnaissance vocale
         speakButton.addEventListener('click', () => {
@@ -90,9 +93,9 @@
             const userInput = event.results[0][0].transcript.toLowerCase();
             console.log("Texte reconnu :", userInput);
 
-            // Vérifier si l'utilisateur a salué (salutation contenant "Véronica")
+            // Vérifier si l'utilisateur a salué
             if (userInput.includes("bonjour") || userInput.includes("salut") || userInput.includes("hé")) {
-                const botResponse = "Bonjour, moi c'est Véronica, et vous ?";
+                const botResponse = userName ? `Salut, ${userName}!` : "Bonjour, moi c'est Véronica, et vous ?";
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
                 recognition.stop();  // Arrêter la reconnaissance après la salutation
@@ -100,8 +103,17 @@
             }
 
             // Vérifier si l'utilisateur a donné son nom
+            else if (userInput.includes("je m'appelle") || userInput.includes("mon nom est") || userInput.includes("je me nomme")) {
+                userName = extractName(userInput);
+                localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
+                const botResponse = `Votre nom est ${userName}. Enchanté, ${userName}!`;
+                console.log("Réponse générée :", botResponse);
+                speakText(botResponse);
+            }
+            // Vérifier si l'utilisateur a simplement dit un nom
             else if (userInput) {
                 userName = userInput.split(" ")[0];  // Suppose que le nom est le premier mot dit
+                localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
                 const botResponse = `Votre nom est ${userName}. Enchanté, ${userName}!`;
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
