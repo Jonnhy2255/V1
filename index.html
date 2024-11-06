@@ -59,6 +59,8 @@
         let voices = [];
         window.speechSynthesis.onvoiceschanged = () => {
             voices = window.speechSynthesis.getVoices();
+            // Une fois les voix chargées, on peut démarrer la synthèse vocale
+            speakText("Bonjour, je suis Véronica, votre assistant IA en paris sportifs et vous.");
         };
 
         // Fonction pour faire parler le chatbot
@@ -70,11 +72,6 @@
             utterance.onerror = (event) => console.error('Erreur de synthèse vocale:', event.error);
             window.speechSynthesis.speak(utterance);
         }
-
-        // Test de synthèse vocale au chargement de la page
-        window.addEventListener('load', () => {
-            speakText("Bonjour, je suis Véronica, votre assistant IA en paris sportifs et vous.");
-        });
 
         // Événement pour commencer la reconnaissance vocale
         speakButton.addEventListener('click', () => {
