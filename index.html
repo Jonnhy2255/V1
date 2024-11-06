@@ -43,88 +43,68 @@
 
     <script>
         const speakButton = document.getElementById('speak-button');
-        let conversationStep = 0;
 
+        // Vérification de la prise en charge de la synthèse vocale et de la reconnaissance vocale
         if (!('speechSynthesis' in window) || !('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
             alert("Votre navigateur ne prend pas en charge la synthèse ou la reconnaissance vocale.");
         }
 
+        // Configuration de la reconnaissance vocale
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.lang = 'fr-FR';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
+        // Attente des voix pour la synthèse vocale
+        let voices = [];
+        window.speechSynthesis.onvoiceschanged = () => {
+            voices = window.speechSynthesis.getVoices();
+        };
+
+        // Fonction pour faire parler le chatbot
         function speakText(text) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
-            speechSynthesis.speak(utterance);
+            utterance.voice = voices.find(voice => voice.lang === 'fr-FR') || null;
+            utterance.onend = () => console.log('La parole est terminée.');
+            utterance.onerror = (event) => console.error('Erreur de synthèse vocale:', event.error);
+            window.speechSynthesis.speak(utterance);
         }
 
-        function startConversation() {
-            if (conversationStep === 0) {
-                speakText("Bonjour, comment vas-tu ?");
-                conversationStep++;
-            }
-        }
+        // Test de synthèse vocale au chargement de la page
+        window.addEventListener('load', () => {
+            speakText("Bonjour, je suis Véronica, votre assistant IA en paris sportifs et vous.");
+        });
 
-        recognition.onresult = (event) => {
-            const userInput = event.results[0][0].transcript.toLowerCase();
-            console.log("Texte reconnu :", userInput);
-
-            if (conversationStep === 1 && userInput.includes("oui")) {
-                speakText("Ok, fais-tu analyser un match ?");
-                conversationStep++;
-            } else if (conversationStep === 2 && userInput.includes("oui")) {
-                speakText("Donne-moi la cote de l'équipe à domicile.");
-                conversationStep++;
-            } else if (conversationStep === 3) {
-                localStorage.setItem("cote_domicile", userInput);
-                speakText("Merci. Donne-moi la cote du match nul.");
-                conversationStep++;
-            } else if (conversationStep === 4) {
-                localStorage.setItem("cote_nul", userInput);
-                speakText("Merci. Donne-moi la cote de l'équipe extérieure.");
-                conversationStep++;
-            } else if (conversationStep === 5) {
-                localStorage.setItem("cote_exterieure", userInput);
-                analyzeCotes();
-                conversationStep++;
-            } else {
-                speakText("Désolé, je n'ai pas compris. Veuillez répondre par oui ou non.");
-            }
-        };
-
-        function analyzeCotes() {
-            const coteDomicile = parseFloat(localStorage.getItem("cote_domicile"));
-            const coteNul = parseFloat(localStorage.getItem("cote_nul"));
-            const coteExterieure = parseFloat(localStorage.getItem("cote_exterieure"));
-
-            let bestOption;
-            if (coteDomicile < coteNul && coteDomicile < coteExterieure) {
-                bestOption = "Victoire de l'équipe à domicile";
-            } else if (coteExterieure < coteDomicile && coteExterieure < coteNul) {
-                bestOption = "Victoire de l'équipe extérieure";
-            } else {
-                bestOption = "Match nul";
-            }
-
-            speakText(`L'option la plus fiable semble être: ${bestOption}`);
-        }
-
+        // Événement pour commencer la reconnaissance vocale
         speakButton.addEventListener('click', () => {
+            console.log("Bouton cliqué, démarrage de la reconnaissance vocale.");
             recognition.start();
         });
 
+        // Événement lorsque l'utilisateur parle
+        recognition.onresult = (event) => {
+            const userInput = event.results[0][0].transcript;
+            console.log("Texte reconnu :", userInput);
+
+            // Réponse du chatbot
+            const botResponse = `Vous avez dit : "${userInput}". Comment puis-je vous aider ?`;
+            console.log("Réponse générée :", botResponse);
+            speakText(botResponse);
+        };
+
+        // Événement lorsque la reconnaissance vocale se termine
         recognition.onspeechend = () => {
             recognition.stop();
+            console.log("Reconnaissance vocale arrêtée.");
         };
 
+        // Gestion des erreurs de reconnaissance vocale
         recognition.onerror = (event) => {
             console.error("Erreur de reconnaissance vocale :", event.error);
-            speakText(`Erreur de reconnaissance vocale : ${event.error}`);
+            speakText("Désolé, je n'ai pas compris. Pouvez-vous répéter ?");
+            recognition.stop();
         };
-
-        startConversation();
     </script>
 </body>
 </html>
