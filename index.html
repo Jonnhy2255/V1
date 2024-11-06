@@ -79,7 +79,7 @@
             const regex = /\b(?:je m'appelle|mon nom est|je me nomme)\s+([a-zA-Zéèêàù]+)\b/;
             const match = phrase.match(regex);
             if (match) return match[1];
-            return phrase.split(" ")[0];  // Si aucun match, prendre le premier mot
+            return ''; // Si aucun nom n'est trouvé
         }
 
         // Événement pour commencer la reconnaissance vocale
@@ -95,7 +95,7 @@
 
             // Vérifier si l'utilisateur a salué
             if (userInput.includes("bonjour") || userInput.includes("salut") || userInput.includes("hé")) {
-                const botResponse = userName ? `Salut, ${userName}!` : "Bonjour, moi c'est Véronica, et vous ?";
+                const botResponse = userName ? `Salut, ${userName}!` : "Bonjour, comment t'appelles-tu ?";
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
                 recognition.stop();  // Arrêter la reconnaissance après la salutation
@@ -104,17 +104,22 @@
 
             // Vérifier si l'utilisateur a donné son nom
             else if (userInput.includes("je m'appelle") || userInput.includes("mon nom est") || userInput.includes("je me nomme")) {
-                userName = extractName(userInput);
-                localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
-                const botResponse = `Votre nom est ${userName}. Enchanté, ${userName}!`;
-                console.log("Réponse générée :", botResponse);
-                speakText(botResponse);
+                const name = extractName(userInput);
+                if (name) {
+                    userName = name;
+                    localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
+                    const botResponse = `Enchanté, ${userName}!`;
+                    console.log("Réponse générée :", botResponse);
+                    speakText(botResponse);
+                } else {
+                    speakText("Désolé, je n'ai pas bien compris ton nom. Peux-tu le répéter ?");
+                }
             }
             // Vérifier si l'utilisateur a simplement dit un nom
             else if (userInput) {
                 userName = userInput.split(" ")[0];  // Suppose que le nom est le premier mot dit
                 localStorage.setItem('userName', userName);  // Mémoriser le nom dans localStorage
-                const botResponse = `Votre nom est ${userName}. Enchanté, ${userName}!`;
+                const botResponse = `Enchanté, ${userName}!`;
                 console.log("Réponse générée :", botResponse);
                 speakText(botResponse);
             }
@@ -129,7 +134,7 @@
         // Gestion des erreurs de reconnaissance vocale
         recognition.onerror = (event) => {
             console.error("Erreur de reconnaissance vocale :", event.error);
-            speakText("Désolé, je n'ai pas compris. Pouvez-vous répéter ?");
+            speakText("Désolé, je n'ai pas compris. Peux-tu répéter ?");
             recognition.stop();
         };
     </script>
