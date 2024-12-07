@@ -3,134 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Vocal</title>
+    <title>Requête API Football</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-        .chat-container {
-            text-align: center;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
             padding: 20px;
         }
-        #speak-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        h1 {
+            color: #333;
         }
-        #speak-button:hover {
-            background-color: #0056b3;
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #resultat {
+            margin-top: 20px;
+        }
+        .match {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h1>Chatbot Vocal</h1>
-        <button id="speak-button">Parler</button>
+    <h1>Requête des matchs du jour</h1>
+    
+    <button id="lancerBtn">Lancer</button>
+    
+    <div id="resultat">
+        <!-- Les résultats de l'API seront affichés ici -->
     </div>
 
     <script>
-        const speakButton = document.getElementById('speak-button');
-
-        // Vérification de la prise en charge de la synthèse vocale et de la reconnaissance vocale
-        if (!('speechSynthesis' in window) || !('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-            alert("Votre navigateur ne prend pas en charge la synthèse ou la reconnaissance vocale.");
-        }
-
-        // Configuration de la reconnaissance vocale
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'fr-FR';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        // Attente des voix pour la synthèse vocale
-        let voices = [];
-        window.speechSynthesis.onvoiceschanged = () => {
-            voices = window.speechSynthesis.getVoices();
-        };
-
-        // Fonction pour faire parler le chatbot
-        function speakText(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'fr-FR';
-            utterance.voice = voices.find(voice => voice.lang === 'fr-FR') || null;
-            utterance.onend = () => console.log('La parole est terminée.');
-            utterance.onerror = (event) => console.error('Erreur de synthèse vocale:', event.error);
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // Événement pour commencer la reconnaissance vocale
-        speakButton.addEventListener('click', () => {
-            console.log("Bouton cliqué, démarrage de la reconnaissance vocale.");
-            recognition.start();
-        });
-
-        // Événement lorsque l'utilisateur parle
-        recognition.onresult = (event) => {
-            const userInput = event.results[0][0].transcript.toLowerCase();
-            console.log("Texte reconnu :", userInput);
-
-            // Vérifier si l'utilisateur a salué
-            if (userInput.includes("bonjour") || userInput.includes("salut") || userInput.includes("hé")) {
-                const botResponse = "Salut, je suis Véronica, ton assistant en analyse sportive.";
-                console.log("Réponse générée :", botResponse);
-                speakText(botResponse);
-            }
-
-            // Vérifier si l'utilisateur demande si le bot peut analyser un match
-            else if (userInput.includes("peux-tu analyser un match") || userInput.includes("analyser un match") || userInput.includes("analyser un événement")) {
-                const botResponse = "Bien sûr, je suis là pour ça. Veuillez me donner le nom des deux équipes, par exemple : Manchester City contre Brentford ou Manchester City vs Brentford.";
-                console.log("Réponse générée :", botResponse);
-                speakText(botResponse);
-            }
-
-            // Vérifier si l'utilisateur donne un match à analyser
-            else if (userInput.includes("contre") || userInput.includes("vs")) {
-                // Extraire les équipes de la phrase
-                const teams = userInput.split(/contre|vs/).map(team => team.trim()).filter(team => team);
-                if (teams.length === 2) {
-                    const botResponse = `D'accord, je vais analyser le match entre ${teams[0]} et ${teams[1]}.`;
-                    console.log("Réponse générée :", botResponse);
-                    speakText(botResponse);
-                } else {
-                    const botResponse = "Désolé, je n'ai pas bien compris. Peux-tu préciser les deux équipes ? Par exemple : Manchester City contre Brentford.";
-                    console.log("Réponse générée :", botResponse);
-                    speakText(botResponse);
+        document.getElementById("lancerBtn").addEventListener("click", function() {
+            fetch('https://v3.football.api-sports.io/fixtures?date=2024-12-07&timezone=Europe/Paris', {
+                method: 'GET',
+                headers: {
+                    'x-rapidapi-host': 'v3.football.api-sports.io',
+                    'x-rapidapi-key': '8dfca692f894c608eebb9703aa8a1c53'
                 }
-            }
-
-            // Vérifier si l'utilisateur donne un autre message
-            else if (userInput) {
-                const botResponse = "Désolé, je n'ai pas compris. Tu veux analyser un match ?";
-                console.log("Réponse générée :", botResponse);
-                speakText(botResponse);
-            }
-        };
-
-        // Événement lorsque la reconnaissance vocale se termine
-        recognition.onspeechend = () => {
-            recognition.stop();
-            console.log("Reconnaissance vocale arrêtée.");
-        };
-
-        // Gestion des erreurs de reconnaissance vocale
-        recognition.onerror = (event) => {
-            console.error("Erreur de reconnaissance vocale :", event.error);
-            speakText("Désolé, je n'ai pas compris. Peux-tu répéter ?");
-            recognition.stop();
-        };
+            })
+            .then(response => response.json())
+            .then(data => {
+                let resultatDiv = document.getElementById("resultat");
+                if (data && data.response) {
+                    let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
+                    data.response.forEach(match => {
+                        matchesHtml += `
+                            <div class="match">
+                                <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br>
+                                Score : ${match.goals.home} - ${match.goals.away}<br>
+                                Statut : ${match.status.long}
+                            </div>
+                        `;
+                    });
+                    resultatDiv.innerHTML = matchesHtml;
+                } else {
+                    resultatDiv.innerHTML = "<p>Aucun match trouvé.</p>";
+                }
+            })
+            .catch(error => {
+                document.getElementById("resultat").innerHTML = "<p>Erreur de récupération des données.</p>";
+                console.error("Erreur : ", error);
+            });
+        });
     </script>
 </body>
 </html>
