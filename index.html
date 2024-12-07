@@ -42,36 +42,53 @@
 
     <script>
         document.getElementById("lancerBtn").addEventListener("click", function() {
-            fetch('https://v3.football.api-sports.io/fixtures?date=2024-12-07&timezone=Europe/Paris', {
-                method: 'GET',
-                headers: {
-                    'x-rapidapi-host': 'v3.football.api-sports.io',
-                    'x-rapidapi-key': '8dfca692f894c608eebb9703aa8a1c53'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                let resultatDiv = document.getElementById("resultat");
-                if (data && data.response) {
-                    let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
-                    data.response.forEach(match => {
-                        matchesHtml += `
-                            <div class="match">
-                                <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br>
-                                Score : ${match.goals.home} - ${match.goals.away}<br>
-                                Statut : ${match.status.long}
-                            </div>
-                        `;
-                    });
-                    resultatDiv.innerHTML = matchesHtml;
-                } else {
-                    resultatDiv.innerHTML = "<p>Aucun match trouvé.</p>";
-                }
-            })
-            .catch(error => {
-                document.getElementById("resultat").innerHTML = "<p>Erreur de récupération des données.</p>";
-                console.error("Erreur : ", error);
-            });
+            console.log("Clic sur le bouton : lancement de la requête API.");
+            
+            const url = 'https://v3.football.api-sports.io/fixtures?date=2024-12-07&timezone=Europe/Paris';
+            const headers = {
+                'x-rapidapi-host': 'v3.football.api-sports.io',
+                'x-rapidapi-key': '8dfca692f894c608eebb9703aa8a1c53',
+                'Accept': 'application/json'
+            };
+
+            console.log("URL de la requête :", url);
+            console.log("En-têtes de la requête :", headers);
+
+            // Effectuer la requête API
+            fetch(url, { method: 'GET', headers: headers })
+                .then(response => {
+                    console.log("Réponse reçue avec le statut :", response.status);
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error(`Erreur de requête API. Statut : ${response.status}`);
+                    }
+                })
+                .then(data => {
+                    console.log("Données reçues :", data);
+
+                    let resultatDiv = document.getElementById("resultat");
+                    if (data && data.response && data.response.length > 0) {
+                        let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
+                        data.response.forEach(match => {
+                            matchesHtml += `
+                                <div class="match">
+                                    <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br>
+                                    Score : ${match.goals.home} - ${match.goals.away}<br>
+                                    Statut : ${match.status.long}
+                                </div>
+                            `;
+                        });
+                        resultatDiv.innerHTML = matchesHtml;
+                    } else {
+                        console.log("Aucun match trouvé.");
+                        resultatDiv.innerHTML = "<p>Aucun match trouvé.</p>";
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur pendant la récupération des données :", error);
+                    document.getElementById("resultat").innerHTML = "<p>Erreur de récupération des données.</p>";
+                });
         });
     </script>
 </body>
