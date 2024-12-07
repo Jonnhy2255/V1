@@ -75,11 +75,19 @@
                             let resultatDiv = document.getElementById("resultat");
                             let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
                             data.response.forEach(match => {
+                                const homeTeam = match.teams.home.name;
+                                const awayTeam = match.teams.away.name;
+                                const homeGoals = match.goals.home || 0; // Valeur par défaut si absente
+                                const awayGoals = match.goals.away || 0; // Valeur par défaut si absente
+                                
+                                // Vérification que la propriété 'status' et 'long' existent
+                                const matchStatus = (match.status && match.status.long) || "Statut inconnu"; 
+
                                 matchesHtml += `
                                     <div class="match">
-                                        <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br>
-                                        Score : ${match.goals.home} - ${match.goals.away}<br>
-                                        Statut : ${match.status.long}
+                                        <strong>${homeTeam} vs ${awayTeam}</strong><br>
+                                        Score : ${homeGoals} - ${awayGoals}<br>
+                                        Statut : ${matchStatus}
                                     </div>
                                 `;
                             });
