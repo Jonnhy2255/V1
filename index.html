@@ -67,22 +67,30 @@
                 .then(data => {
                     console.log("Données reçues :", data);
 
-                    let resultatDiv = document.getElementById("resultat");
-                    if (data && data.response && data.response.length > 0) {
-                        let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
-                        data.response.forEach(match => {
-                            matchesHtml += `
-                                <div class="match">
-                                    <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br>
-                                    Score : ${match.goals.home} - ${match.goals.away}<br>
-                                    Statut : ${match.status.long}
-                                </div>
-                            `;
-                        });
-                        resultatDiv.innerHTML = matchesHtml;
+                    // Vérification de la structure des données
+                    if (data && data.response) {
+                        console.log("Données de la réponse : ", data.response);
+
+                        if (data.response.length > 0) {
+                            let resultatDiv = document.getElementById("resultat");
+                            let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
+                            data.response.forEach(match => {
+                                matchesHtml += `
+                                    <div class="match">
+                                        <strong>${match.teams.home.name} vs ${match.teams.away.name}</strong><br>
+                                        Score : ${match.goals.home} - ${match.goals.away}<br>
+                                        Statut : ${match.status.long}
+                                    </div>
+                                `;
+                            });
+                            resultatDiv.innerHTML = matchesHtml;
+                        } else {
+                            console.log("Aucun match trouvé.");
+                            document.getElementById("resultat").innerHTML = "<p>Aucun match trouvé.</p>";
+                        }
                     } else {
-                        console.log("Aucun match trouvé.");
-                        resultatDiv.innerHTML = "<p>Aucun match trouvé.</p>";
+                        console.log("La réponse ne contient pas de données dans 'response'.");
+                        document.getElementById("resultat").innerHTML = "<p>Aucune donnée retournée par l'API.</p>";
                     }
                 })
                 .catch(error => {
