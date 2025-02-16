@@ -25,17 +25,24 @@
                 }
             };
 
-            // Fonction pour afficher la liste des voix avec le genre
+            // Fonction pour afficher la liste des voix avec un bouton de test
             const afficherListe = (voix) => {
                 let listeVoix = document.getElementById("listeVoix");
                 listeVoix.innerHTML = "<h3>Voix disponibles :</h3><ul>";
-                voix.forEach((voix) => {
-                    let genre = voix.name.toLowerCase().includes("female") ? "Femme" :
-                                voix.name.toLowerCase().includes("male") ? "Homme" : "Inconnu";
-                    
-                    listeVoix.innerHTML += `<li><strong>${voix.name}</strong> (${voix.lang}) - <em>${genre}</em></li>`;
+                voix.forEach((voix, index) => {
+                    listeVoix.innerHTML += `<li>
+                        <strong>${voix.name}</strong> (${voix.lang}) 
+                        <button onclick="testerVoix(${index})">🔊 Écouter</button>
+                    </li>`;
                 });
                 listeVoix.innerHTML += "</ul>";
+            };
+
+            // Fonction pour tester une voix
+            window.testerVoix = (index) => {
+                let utterance = new SpeechSynthesisUtterance("Bonjour, ceci est un test de voix.");
+                utterance.voice = speechSynthesis.getVoices()[index];
+                speechSynthesis.speak(utterance);
             };
 
             // Charger les voix
