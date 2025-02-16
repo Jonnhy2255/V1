@@ -3,109 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Requête API Football</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #resultat {
-            margin-top: 20px;
-        }
-        .match {
-            margin-bottom: 15px;
-        }
-    </style>
+    <title>Voix disponibles</title>
 </head>
 <body>
-    <h1>Requête des matchs du jour</h1>
-    
-    <button id="lancerBtn">Lancer</button>
-    
-    <div id="resultat">
-        <!-- Les résultats de l'API seront affichés ici -->
-    </div>
+
+    <button onclick="afficherVoix()">Afficher les voix disponibles</button>
+    <div id="listeVoix"></div>
 
     <script>
-        document.getElementById("lancerBtn").addEventListener("click", function() {
-            console.log("Clic sur le bouton : lancement de la requête API.");
-            
-            const url = 'https://v3.football.api-sports.io/fixtures?date=2024-12-07&timezone=Europe/Paris';
-            const headers = {
-                'x-rapidapi-host': 'v3.football.api-sports.io',
-                'x-rapidapi-key': '8dfca692f894c608eebb9703aa8a1c53',
-                'Accept': 'application/json'
+        function afficherVoix() {
+            const synth = window.speechSynthesis;
+            let voixDisponibles = [];
+
+            // Recharger la liste des voix car elle peut être vide au départ
+            const chargerVoix = () => {
+                voixDisponibles = synth.getVoices();
+                if (voixDisponibles.length > 0) {
+                    afficherListe(voixDisponibles);
+                } else {
+                    setTimeout(chargerVoix, 100);
+                }
             };
 
-            console.log("URL de la requête :", url);
-            console.log("En-têtes de la requête :", headers);
-
-            // Effectuer la requête API
-            fetch(url, { method: 'GET', headers: headers })
-                .then(response => {
-                    console.log("Réponse reçue avec le statut :", response.status);
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error(`Erreur de requête API. Statut : ${response.status}`);
-                    }
-                })
-                .then(data => {
-                    console.log("Données reçues :", data);
-
-                    // Vérification de la structure des données
-                    if (data && data.response) {
-                        console.log("Données de la réponse : ", data.response);
-
-                        if (data.response.length > 0) {
-                            let resultatDiv = document.getElementById("resultat");
-                            let matchesHtml = "<h2>Matchs du 7 décembre 2024</h2>";
-                            data.response.forEach(match => {
-                                const homeTeam = match.teams.home.name;
-                                const awayTeam = match.teams.away.name;
-                                const homeGoals = match.goals.home || 0; // Valeur par défaut si absente
-                                const awayGoals = match.goals.away || 0; // Valeur par défaut si absente
-                                
-                                // Vérification que la propriété 'status' et 'long' existent
-                                const matchStatus = (match.status && match.status.long) || "Statut inconnu"; 
-
-                                matchesHtml += `
-                                    <div class="match">
-                                        <strong>${homeTeam} vs ${awayTeam}</strong><br>
-                                        Score : ${homeGoals} - ${awayGoals}<br>
-                                        Statut : ${matchStatus}
-                                    </div>
-                                `;
-                            });
-                            resultatDiv.innerHTML = matchesHtml;
-                        } else {
-                            console.log("Aucun match trouvé.");
-                            document.getElementById("resultat").innerHTML = "<p>Aucun match trouvé.</p>";
-                        }
-                    } else {
-                        console.log("La réponse ne contient pas de données dans 'response'.");
-                        document.getElementById("resultat").innerHTML = "<p>Aucune donnée retournée par l'API.</p>";
-                    }
-                })
-                .catch(error => {
-                    console.error("Erreur pendant la récupération des données :", error);
-                    document.getElementById("resultat").innerHTML = "<p>Erreur de récupération des données.</p>";
+            // Fonction pour afficher la liste des voix
+            const afficherListe = (voix) => {
+                let listeVoix = document.getElementById("listeVoix");
+                listeVoix.innerHTML = "<h3>Voix disponibles :</h3><ul>";
+                voix.forEach((voix, index) => {
+                    listeVoix.innerHTML += `<li><strong>${voix.name}</strong> (${voix.lang})</li>`;
                 });
-        });
+                listeVoix.innerHTML += "</ul>";
+            };
+
+            // Charger les voix
+            chargerVoix();
+        }
     </script>
+
 </body>
 </html>
