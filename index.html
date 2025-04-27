@@ -1,806 +1,176 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Store</title>
-    <!-- Utiliser une version spécifique de Tailwind qui fonctionne avec iOS 12 -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <!-- Utiliser une version plus ancienne de Font Awesome compatible avec iOS 12 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    
-    <!-- Ajouter un polyfill pour les fonctionnalités modernes -->
-    <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/dist/fetch.umd.min.js"></script>
-    
-    <script>
-        // Configuration Tailwind simplifiée
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#5D5CDE',
-                    }
-                }
-            }
+  <meta charset="UTF-8">
+  <title>Uploader Avatar Base64 avec Logs</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDP1A9T03YoMhiTAxlGLv_6Tz7gHrdF9y0",
+      authDomain: "betxchange-5f315.firebaseapp.com",
+      projectId: "betxchange-5f315",
+      storageBucket: "betxchange-5f315.appspot.com",
+      messagingSenderId: "157220736694",
+      appId: "1:157220736694:web:b3a8d9b65c7f54de28c5a0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user;
+        showLog("Utilisateur connecté : " + user.email, "info");
+        loadAvatar();
+      } else {
+        showLog("Connecte-toi d'abord !", "error");
+      }
+    });
+
+    async function loadAvatar() {
+      try {
+        const docRef = doc(db, "users", currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.avatar) {
+            document.getElementById('avatar-img').src = data.avatar;
+            document.getElementById('delete-btn').style.display = 'inline-block';
+            showLog("Avatar chargé avec succès.", "success");
+          } else {
+            showLog("Aucun avatar trouvé.", "info");
+          }
         }
-        
-        // Fonction de compatibilité pour la détection du mode sombre
-        function checkDarkMode() {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.classList.add('dark');
-            }
+      } catch (err) {
+        console.error(err);
+        showLog("Erreur en chargeant l'avatar.", "error");
+      }
+    }
+
+    async function uploadAvatar(file) {
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        const base64 = e.target.result;
+        try {
+          await updateDoc(doc(db, "users", currentUser.uid), { avatar: base64 });
+          document.getElementById('avatar-img').src = base64;
+          document.getElementById('delete-btn').style.display = 'inline-block';
+          showLog("Avatar uploadé avec succès !", "success");
+        } catch (err) {
+          console.error(err);
+          showLog("Erreur lors de l'upload de l'avatar.", "error");
         }
-        
-        // Version simplifiée du listener pour la compatibilité iOS 12
-        function addDarkModeListener() {
-            try {
-                var darkModeMedia = window.matchMedia('(prefers-color-scheme: dark)');
-                
-                // Utiliser la méthode addListener au lieu de addEventListener pour compatibilité
-                darkModeMedia.addListener(function(e) {
-                    if (e.matches) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-                });
-            } catch (e) {
-                console.log("Mode sombre non supporté sur cet appareil");
-            }
-        }
-    </script>
-    
-    <!-- Styles de secours pour assurer l'affichage de base -->
-    <style>
-        /* Styles de base pour iOS 12 au cas où Tailwind ne fonctionne pas correctement */
-        .ios-fallback {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        
-        /* Assurer que les transitions sont douces sur iOS 12 */
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        /* Optimisations pour Safari iOS 12 */
-        .ios-rounded {
-            -webkit-border-radius: 10px;
-            border-radius: 10px;
-        }
-        
-        /* Fix pour les toggles sur iOS 12 */
-        .toggle-fix {
-            -webkit-appearance: none;
-            appearance: none;
-        }
-    </style>
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function deleteAvatar() {
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), { avatar: "" });
+        document.getElementById('avatar-img').src = "";
+        document.getElementById('delete-btn').style.display = 'none';
+        showLog("Avatar supprimé !", "success");
+      } catch (err) {
+        console.error(err);
+        showLog("Erreur lors de la suppression.", "error");
+      }
+    }
+
+    window.handleFileChange = function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        uploadAvatar(file);
+      } else {
+        showLog("Aucun fichier sélectionné.", "info");
+      }
+    };
+
+    window.deleteAvatar = deleteAvatar;
+
+    // Fonction pour afficher un log visuel
+    function showLog(message, type = "info") {
+      const log = document.createElement("div");
+      log.textContent = message;
+      log.className = "log-message " + type;
+      document.getElementById('log-container').appendChild(log);
+
+      // Auto-effacer après 5 secondes
+      setTimeout(() => {
+        log.remove();
+      }, 5000);
+    }
+  </script>
+
+  <style>
+    body {
+      text-align: center;
+      padding: 50px;
+      font-family: Arial, sans-serif;
+    }
+    #avatar-img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: #eee;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+    #delete-btn {
+      display: none;
+      margin-top: 10px;
+    }
+    #log-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      pointer-events: none;
+    }
+    .log-message {
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      width: fit-content;
+      max-width: 90%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+      pointer-events: auto;
+    }
+    .log-message.success { background-color: #4CAF50; }
+    .log-message.error { background-color: #F44336; }
+    .log-message.info { background-color: #2196F3; }
+
+    @keyframes fadeIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen ios-fallback">
-    <div class="max-w-md mx-auto pb-20">
-        <!-- Header -->
-        <header class="sticky top-0 z-10 bg-white dark:bg-gray-900 pt-4 pb-2 px-4 border-b border-gray-200 dark:border-gray-700">
-            <h1 class="text-2xl font-bold">App Store</h1>
-            <h2 class="text-sm text-gray-500 dark:text-gray-400">BetStore</h2>
-        </header>
 
-        <!-- Main content -->
-        <main class="pb-16">
-            <!-- Nouveautés Section -->
-            <section id="nouveautes" class="px-4 py-4">
-                <h2 class="text-xl font-bold mb-2">Nouveautés</h2>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Découvrez notre application du moment</p>
-                
-                <!-- Featured App -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-bold mb-2">À la une</h3>
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-4 app-card" data-app-id="apple-of-fortune">
-                        <div class="flex items-start">
-                            <div class="bg-primary rounded-xl ios-rounded h-16 w-16 flex items-center justify-center mr-4 shrink-0">
-                                <i class="fas fa-apple-alt text-white text-2xl"></i>
-                            </div>
-                            <div class="flex-1">
-                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium px-2 py-0.5 rounded">NOUVEAU</span>
-                                <h4 class="font-bold mt-1">Apple of Fortune</h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Jeux • Fortune Games</p>
-                                <div class="flex justify-between items-center mt-2">
-                                    <div>
-                                        <span class="flex items-center">
-                                            <i class="fas fa-star text-yellow-400"></i>
-                                            <span class="ml-1 text-sm">4.9 (1 243)</span>
-                                        </span>
-                                    </div>
-                                    <a href="https://apple-of-fortune.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-1 px-4 rounded-full text-sm get-app-btn" data-app-id="apple-of-fortune">
-                                        OBTENIR
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-sm mt-3">Tentez votre chance et récoltez des pommes d'or dans ce jeu captivant. Faites tourner la roue et découvrez votre destin !</p>
-                    </div>
-                </div>
-            </section>
+<body>
+  <h2>Uploader votre avatar</h2>
 
-            <!-- Jeux Section -->
-            <section id="jeux" class="px-4 py-4">
-                <h2 class="text-xl font-bold mb-4">Jeux</h2>
-                <h3 class="text-lg mb-2">Les meilleurs jeux du moment</h3>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Game 1 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="apple-of-fortune">
-                        <div class="bg-primary rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-apple-alt text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Apple of Fortune</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Jeux • Fortune</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.9</span>
-                            </span>
-                            <a href="https://apple-of-fortune.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="apple-of-fortune">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Game 2 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="car-racing">
-                        <div class="bg-red-500 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-car text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Car Racing</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Jeux • Course</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.7</span>
-                            </span>
-                            <a href="https://car-racing.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="car-racing">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Game 3 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="puzzle-pro">
-                        <div class="bg-green-500 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-puzzle-piece text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Puzzle Pro</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Jeux • Réflexion</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.8</span>
-                            </span>
-                            <a href="https://puzzle-pro.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="puzzle-pro">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Game 4 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="monster-battle">
-                        <div class="bg-purple-600 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-dragon text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Monster Battle</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Jeux • Action</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.6</span>
-                            </span>
-                            <a href="https://monster-battle.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="monster-battle">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
+  <img id="avatar-img" src="" alt="Pas d'avatar" />
+  <br/>
 
-            <!-- Sport Section -->
-            <section id="sport" class="px-4 py-4">
-                <h2 class="text-xl font-bold mb-4">Sport</h2>
-                <h3 class="text-lg mb-2">Applications sportives populaires</h3>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Sport App 1 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="fitness-run">
-                        <div class="bg-blue-500 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-running text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Fitness Run</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Sport • Course</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.7</span>
-                            </span>
-                            <a href="https://fitness-run.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="fitness-run">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Sport App 2 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="yoga-go">
-                        <div class="bg-teal-500 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-om text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Yoga GO</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Sport • Bien-être</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.9</span>
-                            </span>
-                            <a href="https://yoga-go.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="yoga-go">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Sport App 3 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="sport-chrono">
-                        <div class="bg-amber-500 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-stopwatch text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Sport Chrono</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Sport • Chronomètre</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.5</span>
-                            </span>
-                            <a href="https://sport-chrono.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="sport-chrono">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Sport App 4 -->
-                    <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-3 app-card" data-app-id="football-tracker">
-                        <div class="bg-green-600 rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mb-2">
-                            <i class="fas fa-futbol text-white text-xl"></i>
-                        </div>
-                        <h4 class="font-bold text-sm">Football Tracker</h4>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Sport • Football</p>
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="flex items-center">
-                                <i class="fas fa-star text-yellow-400 text-xs"></i>
-                                <span class="ml-1 text-xs">4.8</span>
-                            </span>
-                            <a href="https://football-tracker.com" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-0.5 px-3 rounded-full text-xs get-app-btn" data-app-id="football-tracker">
-                                Obtenir
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
+  <input type="file" accept="image/*" onchange="handleFileChange(event)" />
+  <br/>
 
-            <!-- Profil Section -->
-            <section id="profil" class="px-4 py-4 hidden">
-                <h2 class="text-xl font-bold mb-4">Profil</h2>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Votre compte et vos applications</p>
-                
-                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-4 mb-6">
-                    <div class="flex items-center mb-4">
-                        <div class="bg-primary rounded-full h-12 w-12 flex items-center justify-center mr-4">
-                            <span class="text-white text-xl font-bold">U</span>
-                        </div>
-                        <div>
-                            <h4 class="font-bold">Utilisateur</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">utilisateur@exemple.com</p>
-                        </div>
-                    </div>
-                    <button class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-lg text-sm w-full">
-                        Modifier le profil
-                    </button>
-                </div>
-                
-                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-4 mb-6">
-                    <h3 class="font-bold mb-3">Paramètres</h3>
-                    <div class="flex justify-between items-center mb-2">
-                        <span>Notifications</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" value="" class="sr-only peer toggle-fix" checked>
-                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span>Mises à jour automatiques</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" value="" class="sr-only peer toggle-fix" checked>
-                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span>Mode sombre</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" value="" class="sr-only peer toggle-fix" id="darkModeToggle">
-                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl ios-rounded p-4">
-                    <h3 class="font-bold mb-3">Mes applications (1)</h3>
-                    <div class="flex items-center app-card" data-app-id="apple-of-fortune">
-                        <div class="bg-primary rounded-xl ios-rounded h-12 w-12 flex items-center justify-center mr-4">
-                            <i class="fas fa-apple-alt text-white text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold">Apple of Fortune</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Installée le 01/06/2023</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
+  <button id="delete-btn" onclick="deleteAvatar()">Supprimer l'avatar</button>
 
-        <!-- Navigation -->
-        <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700">
-            <div class="max-w-md mx-auto flex justify-around">
-                <button id="nav-nouveautes" class="flex flex-col items-center py-2 px-4 text-primary">
-                    <i class="fas fa-newspaper text-xl"></i>
-                    <span class="text-xs mt-1">Nouveautés</span>
-                </button>
-                <button id="nav-jeux" class="flex flex-col items-center py-2 px-4 text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-gamepad text-xl"></i>
-                    <span class="text-xs mt-1">Jeux</span>
-                </button>
-                <button id="nav-sport" class="flex flex-col items-center py-2 px-4 text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-running text-xl"></i>
-                    <span class="text-xs mt-1">Sport</span>
-                </button>
-                <button id="nav-profil" class="flex flex-col items-center py-2 px-4 text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-user text-xl"></i>
-                    <span class="text-xs mt-1">Profil</span>
-                </button>
-            </div>
-        </nav>
-
-        <!-- App Detail Modal -->
-        <div id="app-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 hidden">
-            <div class="bg-white dark:bg-gray-900 rounded-xl ios-rounded max-w-md w-full max-h-[90vh] overflow-y-auto">
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900 z-10">
-                    <button id="close-app-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                    <h3 class="font-bold text-lg">Détails de l'application</h3>
-                    <div class="w-5"></div> <!-- Empty space for alignment -->
-                </div>
-                <div id="app-detail-content" class="p-4">
-                    <!-- App detail content will be inserted here by JS -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Image Viewer Modal -->
-        <div id="image-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75 hidden">
-            <div class="relative">
-                <button id="close-image-modal" class="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full h-10 w-10 flex items-center justify-center">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-                <img id="modal-image" class="max-w-full max-h-[80vh] rounded-lg" src="" alt="Image en plein écran">
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Compatibilité iOS 12: Initialiser le mode sombre
-        document.addEventListener('DOMContentLoaded', function() {
-            checkDarkMode();
-            addDarkModeListener();
-        });
-
-        // App data store avec des URLs fonctionnelles
-        const appData = {
-            'apple-of-fortune': {
-                id: 'apple-of-fortune',
-                title: 'Apple of Fortune',
-                developer: 'Betsmart',
-                category: 'Hacking Games',
-                rating: 4.9,
-                reviews: '1 243',
-                description: 'Apple of Fortune est une application de hacking du jeu apple of fortune des bookmakers de grande fiabilité',
-                features: [
-                    'Interception de signaux',
-                    'Prédictions',
-                    'Qualité 85+',
-                    'Classement mondial',
-                    'Gains rapides'
-                ],
-                size: '=>1mb',
-                screenshots: [
-                    'https://raw.githubusercontent.com/Jonnhy2255/Apple-of-Fortune/main/applefunction1.png',
-                    'https://raw.githubusercontent.com/Jonnhy2255/Apple-of-Fortune/main/applefunction2.png',
-                    'https://raw.githubusercontent.com/Jonnhy2255/Apple-of-Fortune/main/applefunction3.png'
-                ],
-                icon: 'fa-apple-alt',
-                iconColor: 'bg-primary',
-                pwaUrl: 'https://jonnhy2255.github.io/Apple-of-Fortune/'
-            },
-            'car-racing': {
-                id: 'car-racing',
-                title: 'Car Racing',
-                developer: 'Racing Games',
-                category: 'Jeux • Course',
-                rating: 4.7,
-                reviews: '875',
-                description: 'Plongez dans l\'univers des courses automobiles avec ce jeu rapide et addictif. Pilotez des voitures de course et affrontez vos adversaires sur des circuits du monde entier.',
-                features: [
-                    'Multiples circuits et voitures',
-                    'Mode carrière',
-                    'Défis multijoueurs',
-                    'Personnalisation des véhicules'
-                ],
-                size: '45 MB',
-                screenshots: [
-                    'https://picsum.photos/id/111/800/400',
-                    'https://picsum.photos/id/133/800/400',
-                    'https://picsum.photos/id/155/800/400'
-                ],
-                icon: 'fa-car',
-                iconColor: 'bg-red-500',
-                pwaUrl: 'https://car-racing.com'
-            },
-            'puzzle-pro': {
-                id: 'puzzle-pro',
-                title: 'Puzzle Pro',
-                developer: 'Mind Games',
-                category: 'Jeux • Réflexion',
-                rating: 4.8,
-                reviews: '632',
-                description: 'Stimulez votre cerveau avec une collection de puzzles captivants qui mettront à l\'épreuve votre logique et votre créativité.',
-                features: [
-                    'Des centaines de niveaux',
-                    'Puzzles quotidiens',
-                    'Progressez en difficulté',
-                    'Défis hebdomadaires'
-                ],
-                size: '25 MB',
-                screenshots: [
-                    'https://picsum.photos/id/24/800/400',
-                    'https://picsum.photos/id/26/800/400',
-                    'https://picsum.photos/id/28/800/400'
-                ],
-                icon: 'fa-puzzle-piece',
-                iconColor: 'bg-green-500',
-                pwaUrl: 'https://puzzle-pro.com'
-            },
-            'monster-battle': {
-                id: 'monster-battle',
-                title: 'Monster Battle',
-                developer: 'Epic Games',
-                category: 'Jeux • Action',
-                rating: 4.6,
-                reviews: '987',
-                description: 'Collectionnez et entraînez des monstres uniques pour affronter d\'autres joueurs dans des combats épiques.',
-                features: [
-                    'Plus de 100 monstres à collectionner',
-                    'Combats en temps réel',
-                    'Évolution et amélioration',
-                    'Événements spéciaux'
-                ],
-                size: '75 MB',
-                screenshots: [
-                    'https://picsum.photos/id/40/800/400',
-                    'https://picsum.photos/id/42/800/400',
-                    'https://picsum.photos/id/44/800/400'
-                ],
-                icon: 'fa-dragon',
-                iconColor: 'bg-purple-600',
-                pwaUrl: 'https://monster-battle.com'
-            },
-            'fitness-run': {
-                id: 'fitness-run',
-                title: 'Fitness Run',
-                developer: 'Health Apps',
-                category: 'Sport • Course',
-                rating: 4.7,
-                reviews: '542',
-                description: 'Suivez vos performances de course, fixez-vous des objectifs et améliorez votre condition physique grâce à cette application complète.',
-                features: [
-                    'Suivi GPS',
-                    'Statistiques détaillées',
-                    'Plans d\'entraînement',
-                    'Communauté de coureurs'
-                ],
-                size: '35 MB',
-                screenshots: [
-                    'https://picsum.photos/id/50/800/400',
-                    'https://picsum.photos/id/52/800/400',
-                    'https://picsum.photos/id/54/800/400'
-                ],
-                icon: 'fa-running',
-                iconColor: 'bg-blue-500',
-                pwaUrl: 'https://fitness-run.com'
-            },
-            'yoga-go': {
-                id: 'yoga-go',
-                title: 'Yoga GO',
-                developer: 'Wellness Studio',
-                category: 'Sport • Bien-être',
-                rating: 4.9,
-                reviews: '1 121',
-                description: 'Pratiquez le yoga n\'importe où avec des séances guidées par des professionnels pour tous les niveaux.',
-                features: [
-                    'Séances adaptées à tous niveaux',
-                    'Méditations guidées',
-                    'Suivi de progression',
-                    'Programmes personnalisés'
-                ],
-                size: '30 MB',
-                screenshots: [
-                    'https://picsum.photos/id/60/800/400',
-                    'https://picsum.photos/id/62/800/400',
-                    'https://picsum.photos/id/64/800/400'
-                ],
-                icon: 'fa-om',
-                iconColor: 'bg-teal-500',
-                pwaUrl: 'https://yoga-go.com'
-            },
-            'sport-chrono': {
-                id: 'sport-chrono',
-                title: 'Sport Chrono',
-                developer: 'Training Tools',
-                category: 'Sport • Chronomètre',
-                rating: 4.5,
-                reviews: '327',
-                description: 'Chronométrez vos séances d\'entraînement avec précision et suivez vos performances au fil du temps.',
-                features: [
-                    'Chronomètre professionnel',
-                    'Intervalles personnalisables',
-                    'Historique détaillé',
-                    'Export des données'
-                ],
-                size: '15 MB',
-                screenshots: [
-                    'https://picsum.photos/id/70/800/400',
-                    'https://picsum.photos/id/72/800/400',
-                    'https://picsum.photos/id/74/800/400'
-                ],
-                icon: 'fa-stopwatch',
-                iconColor: 'bg-amber-500',
-                pwaUrl: 'https://sport-chrono.com'
-            },
-            'football-tracker': {
-                id: 'football-tracker',
-                title: 'Football Tracker',
-                developer: 'Sports Analytics',
-                category: 'Sport • Football',
-                rating: 4.8,
-                reviews: '893',
-                description: 'Suivez vos statistiques de football, améliorez votre technique et restez informé des derniers résultats.',
-                features: [
-                    'Suivi des performances',
-                    'Exercices d\'entraînement',
-                    'Actualités et résultats',
-                    'Vidéos techniques'
-                ],
-                size: '40 MB',
-                screenshots: [
-                    'https://picsum.photos/id/80/800/400',
-                    'https://picsum.photos/id/82/800/400',
-                    'https://picsum.photos/id/84/800/400'
-                ],
-                icon: 'fa-futbol',
-                iconColor: 'bg-green-600',
-                pwaUrl: 'https://football-tracker.com'
-            }
-        };
-
-        // Version simplifiée de la navigation pour iOS 12
-        function setupNavigation() {
-            var navButtons = document.querySelectorAll('nav button');
-            
-            for (var i = 0; i < navButtons.length; i++) {
-                navButtons[i].addEventListener('click', function(e) {
-                    // Désélectionner tous les boutons
-                    for (var j = 0; j < navButtons.length; j++) {
-                        navButtons[j].classList.remove('text-primary');
-                        navButtons[j].classList.add('text-gray-500', 'dark:text-gray-400');
-                    }
-                    
-                    // Sélectionner le bouton cliqué
-                    this.classList.remove('text-gray-500', 'dark:text-gray-400');
-                    this.classList.add('text-primary');
-                    
-                    // Cacher toutes les sections
-                    var sections = document.querySelectorAll('main section');
-                    for (var k = 0; k < sections.length; k++) {
-                        sections[k].classList.add('hidden');
-                    }
-                    
-                    // Afficher la section sélectionnée
-                    var sectionId = this.id.replace('nav-', '');
-                    document.getElementById(sectionId).classList.remove('hidden');
-                });
-            }
-            
-            // Initialiser avec la section Nouveautés
-            document.getElementById('nav-nouveautes').click();
-        }
-
-        // Version simplifiée du toggle mode sombre pour iOS 12
-        function setupDarkModeToggle() {
-            var darkModeToggle = document.getElementById('darkModeToggle');
-            
-            // Initialiser l'état du toggle
-            darkModeToggle.checked = document.documentElement.classList.contains('dark');
-            
-            darkModeToggle.addEventListener('change', function() {
-                if (this.checked) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            });
-        }
-
-        // Version compatible avec iOS 12 pour la gestion des modals
-        function setupModals() {
-            var appModal = document.getElementById('app-modal');
-            var closeAppModal = document.getElementById('close-app-modal');
-            var imageModal = document.getElementById('image-modal');
-            var closeImageModal = document.getElementById('close-image-modal');
-            
-            // Fermer le modal d'application
-            closeAppModal.addEventListener('click', function() {
-                appModal.classList.add('hidden');
-            });
-            
-            // Fermer le modal d'image
-            closeImageModal.addEventListener('click', function() {
-                imageModal.classList.add('hidden');
-            });
-            
-            // Fermer les modals lors d'un clic à l'extérieur
-            window.addEventListener('click', function(e) {
-                if (e.target === appModal) {
-                    appModal.classList.add('hidden');
-                }
-                
-                if (e.target === imageModal) {
-                    imageModal.classList.add('hidden');
-                }
-            });
-        }
-
-        // Version compatible avec iOS 12 pour la gestion des détails de l'application
-        function setupAppDetails() {
-            var appCards = document.querySelectorAll('.app-card');
-            var appModal = document.getElementById('app-modal');
-            var appDetailContent = document.getElementById('app-detail-content');
-            
-            for (var i = 0; i < appCards.length; i++) {
-                appCards[i].addEventListener('click', function(e) {
-                    // Ne pas ouvrir le modal si le clic était sur un bouton
-                    if (e.target.closest('.get-app-btn')) {
-                        return;
-                    }
-                    
-                    var appId = this.getAttribute('data-app-id');
-                    showAppDetails(appId);
-                });
-            }
-        }
-
-        // Fonction pour afficher les détails de l'application
-        function showAppDetails(appId) {
-            var app = appData[appId];
-            if (!app) return;
-            
-            var appModal = document.getElementById('app-modal');
-            var appDetailContent = document.getElementById('app-detail-content');
-            
-            var screenshotsHTML = '';
-            if (app.screenshots && app.screenshots.length > 0) {
-                screenshotsHTML = '<h4 class="font-bold text-lg mt-6 mb-2">Captures d\'écran</h4>' +
-                    '<div class="flex overflow-x-auto space-x-3 pb-3 -mx-4 px-4">';
-                
-                for (var i = 0; i < app.screenshots.length; i++) {
-                    screenshotsHTML += '<img src="' + app.screenshots[i] + '" alt="Screenshot ' + (i+1) + '" ' +
-                        'class="h-40 w-auto rounded-lg object-cover app-screenshot" ' +
-                        'data-src="' + app.screenshots[i] + '">';
-                }
-                
-                screenshotsHTML += '</div>';
-            }
-            
-            var featuresHTML = '';
-            if (app.features && app.features.length > 0) {
-                featuresHTML = '<h4 class="font-bold mt-4 mb-2">Fonctionnalités :</h4>' +
-                    '<ul class="list-disc pl-5 space-y-1">';
-                
-                for (var i = 0; i < app.features.length; i++) {
-                    featuresHTML += '<li>' + app.features[i] + '</li>';
-                }
-                
-                featuresHTML += '</ul>';
-            }
-            
-            appDetailContent.innerHTML = 
-                '<div class="flex items-center mb-4">' +
-                    '<div class="' + (app.iconColor || 'bg-primary') + ' rounded-xl ios-rounded h-16 w-16 flex items-center justify-center mr-4 shrink-0">' +
-                        '<i class="fas ' + app.icon + ' text-white text-2xl"></i>' +
-                    '</div>' +
-                    '<div>' +
-                        '<h3 class="font-bold text-xl">' + app.title + '</h3>' +
-                        '<p class="text-sm text-gray-500 dark:text-gray-400">' + app.developer + '</p>' +
-                        '<div class="flex items-center mt-1">' +
-                            '<span class="flex items-center">' +
-                                '<i class="fas fa-star text-yellow-400"></i>' +
-                                '<span class="ml-1">' + app.rating + '</span>' +
-                            '</span>' +
-                            '<span class="mx-2 text-gray-400">•</span>' +
-                            '<span class="text-sm text-gray-500 dark:text-gray-400">' + app.reviews + ' avis</span>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-                
-                '<div class="flex justify-between items-center my-4">' +
-                    '<span class="text-sm text-gray-500 dark:text-gray-400">Taille : ' + app.size + '</span>' +
-                    '<a href="' + app.pwaUrl + '" target="_blank" class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded-full open-pwa-btn" data-app-id="' + app.id + '">' +
-                        'OBTENIR' +
-                    '</a>' +
-                '</div>' +
-                
-                '<div class="mt-6">' +
-                    '<h4 class="font-bold text-lg mb-2">Description</h4>' +
-                    '<p>' + app.description + '</p>' +
-                    featuresHTML +
-                '</div>' +
-                
-                screenshotsHTML +
-                
-                '<div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mt-6">' +
-                    '<h4 class="font-bold mb-2">Comment installer cette PWA</h4>' +
-                    '<ol class="space-y-2 text-sm">' +
-                        '<li>Cliquez sur le bouton "Ouvrir" ci-dessous</li>' +
-                        '<li>Sur iOS : Appuyez sur l\'icône de partage <i class="fas fa-share-square"></i> puis "Sur l\'écran d\'accueil"</li>' +
-                        '<li>Sur Android : Cliquez sur les trois points ⋮ puis "Ajouter à l\'écran d\'accueil"</li>' +
-                        '<li>L\'application sera installée sur votre écran d\'accueil comme une app native</li>' +
-                    '</ol>' +
-                    '<a href="' + app.pwaUrl + '" target="_blank" class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-lg text-sm w-full mt-3 block text-center">' +
-                        'Ouvrir' +
-                    '</a>' +
-                '</div>';
-            
-            // Afficher le modal
-            appModal.classList.remove('hidden');
-            
-            // Configurer les gestionnaires d'événements pour les captures d'écran
-            var screenshots = document.querySelectorAll('.app-screenshot');
-            for (var i = 0; i < screenshots.length; i++) {
-                screenshots[i].addEventListener('click', function() {
-                    var src = this.getAttribute('data-src');
-                    showImageViewer(src);
-                });
-            }
-        }
-
-        // Fonction pour afficher l'image en plein écran
-        function showImageViewer(imageSrc) {
-            var modalImage = document.getElementById('modal-image');
-            var imageModal = document.getElementById('image-modal');
-            
-            modalImage.src = imageSrc;
-            imageModal.classList.remove('hidden');
-        }
-
-        // Initialisation compatible avec iOS 12
-        document.addEventListener('DOMContentLoaded', function() {
-            setupNavigation();
-            setupDarkModeToggle();
-            setupModals();
-            setupAppDetails();
-        });
-    </script>
+  <!-- Conteneur pour les logs visuels -->
+  <div id="log-container"></div>
 </body>
 </html>
