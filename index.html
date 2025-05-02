@@ -1,176 +1,158 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Uploader Avatar Base64 avec Logs</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDP1A9T03YoMhiTAxlGLv_6Tz7gHrdF9y0",
-      authDomain: "betxchange-5f315.firebaseapp.com",
-      projectId: "betxchange-5f315",
-      storageBucket: "betxchange-5f315.appspot.com",
-      messagingSenderId: "157220736694",
-      appId: "1:157220736694:web:b3a8d9b65c7f54de28c5a0"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        currentUser = user;
-        showLog("Utilisateur connecté : " + user.email, "info");
-        loadAvatar();
-      } else {
-        showLog("Connecte-toi d'abord !", "error");
-      }
-    });
-
-    async function loadAvatar() {
-      try {
-        const docRef = doc(db, "users", currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.avatar) {
-            document.getElementById('avatar-img').src = data.avatar;
-            document.getElementById('delete-btn').style.display = 'inline-block';
-            showLog("Avatar chargé avec succès.", "success");
-          } else {
-            showLog("Aucun avatar trouvé.", "info");
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Prédictions Premier League</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 20px;
         }
-      } catch (err) {
-        console.error(err);
-        showLog("Erreur en chargeant l'avatar.", "error");
-      }
-    }
-
-    async function uploadAvatar(file) {
-      const reader = new FileReader();
-      reader.onload = async function (e) {
-        const base64 = e.target.result;
-        try {
-          await updateDoc(doc(db, "users", currentUser.uid), { avatar: base64 });
-          document.getElementById('avatar-img').src = base64;
-          document.getElementById('delete-btn').style.display = 'inline-block';
-          showLog("Avatar uploadé avec succès !", "success");
-        } catch (err) {
-          console.error(err);
-          showLog("Erreur lors de l'upload de l'avatar.", "error");
+        h1 {
+            text-align: center;
+            color: #333;
         }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function deleteAvatar() {
-      try {
-        await updateDoc(doc(db, "users", currentUser.uid), { avatar: "" });
-        document.getElementById('avatar-img').src = "";
-        document.getElementById('delete-btn').style.display = 'none';
-        showLog("Avatar supprimé !", "success");
-      } catch (err) {
-        console.error(err);
-        showLog("Erreur lors de la suppression.", "error");
-      }
-    }
-
-    window.handleFileChange = function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        uploadAvatar(file);
-      } else {
-        showLog("Aucun fichier sélectionné.", "info");
-      }
-    };
-
-    window.deleteAvatar = deleteAvatar;
-
-    // Fonction pour afficher un log visuel
-    function showLog(message, type = "info") {
-      const log = document.createElement("div");
-      log.textContent = message;
-      log.className = "log-message " + type;
-      document.getElementById('log-container').appendChild(log);
-
-      // Auto-effacer après 5 secondes
-      setTimeout(() => {
-        log.remove();
-      }, 5000);
-    }
-  </script>
-
-  <style>
-    body {
-      text-align: center;
-      padding: 50px;
-      font-family: Arial, sans-serif;
-    }
-    #avatar-img {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      background: #eee;
-      object-fit: cover;
-      margin-bottom: 10px;
-    }
-    #delete-btn {
-      display: none;
-      margin-top: 10px;
-    }
-    #log-container {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      right: 20px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: center;
-      pointer-events: none;
-    }
-    .log-message {
-      padding: 10px 20px;
-      border-radius: 8px;
-      color: white;
-      font-weight: bold;
-      width: fit-content;
-      max-width: 90%;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      animation: fadeIn 0.3s ease;
-      pointer-events: auto;
-    }
-    .log-message.success { background-color: #4CAF50; }
-    .log-message.error { background-color: #F44336; }
-    .log-message.info { background-color: #2196F3; }
-
-    @keyframes fadeIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-  </style>
+        .match-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .team-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .date {
+            font-size: 14px;
+            color: #777;
+        }
+        .prediction {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #2a9d8f;
+            font-weight: bold;
+        }
+    </style>
 </head>
-
 <body>
-  <h2>Uploader votre avatar</h2>
+    <h1>Prédictions Premier League</h1>
+    <div id="matches"></div>
 
-  <img id="avatar-img" src="" alt="Pas d'avatar" />
-  <br/>
+    <script>
+        const API_KEY = '097484f1d09ec785f42ad0be238ffabf';
+        const BASE_URL = 'https://v3.football.api-sports.io';
+        const LEAGUE_ID = 39;
+        const SEASON = 2024;
 
-  <input type="file" accept="image/*" onchange="handleFileChange(event)" />
-  <br/>
+        const headers = {
+            'x-rapidapi-host': 'v3.football.api-sports.io',
+            'x-rapidapi-key': API_KEY
+        };
 
-  <button id="delete-btn" onclick="deleteAvatar()">Supprimer l'avatar</button>
+        async function getUpcomingMatches() {
+            const res = await fetch(`${BASE_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}&next=3`, { headers });
+            const data = await res.json();
+            return data.response;
+        }
 
-  <!-- Conteneur pour les logs visuels -->
-  <div id="log-container"></div>
+        async function getStandings() {
+            const res = await fetch(`${BASE_URL}/standings?league=${LEAGUE_ID}&season=${SEASON}`, { headers });
+            const data = await res.json();
+            const standings = {};
+            data.response[0].league.standings[0].forEach(team => {
+                standings[team.team.id] = team.rank;
+            });
+            return standings;
+        }
+
+        async function getLastMatches(teamId) {
+            const res = await fetch(`${BASE_URL}/fixtures?team=${teamId}&last=5`, { headers });
+            const data = await res.json();
+            return data.response;
+        }
+
+        function calculateForm(matches, teamId) {
+            let points = 0;
+            matches.forEach(match => {
+                const isHome = match.teams.home.id === teamId;
+                const goalsFor = isHome ? match.goals.home : match.goals.away;
+                const goalsAgainst = isHome ? match.goals.away : match.goals.home;
+
+                if (goalsFor > goalsAgainst) points += 3;
+                else if (goalsFor === goalsAgainst) points += 1;
+            });
+            return points;
+        }
+
+        function predictWinner(homeRank, awayRank, homeForm, awayForm, homeName, awayName) {
+            let score = 0;
+            if (homeRank < awayRank) score += 1;
+            else if (homeRank > awayRank) score -=1;
+
+            if (homeForm > awayForm) score +=1;
+            else if (homeForm < awayForm) score -=1;
+
+            if (score > 0) return homeName;
+            else if (score < 0) return awayName;
+            else return 'Match nul';
+        }
+
+        async function displayMatches() {
+            const matchesDiv = document.getElementById('matches');
+            const standings = await getStandings();
+            const matches = await getUpcomingMatches();
+
+            for (const match of matches) {
+                const home = match.teams.home;
+                const away = match.teams.away;
+                const date = new Date(match.fixture.date).toLocaleString('fr-FR');
+
+                const homeLast = await getLastMatches(home.id);
+                const awayLast = await getLastMatches(away.id);
+
+                const homeForm = calculateForm(homeLast, home.id);
+                const awayForm = calculateForm(awayLast, away.id);
+
+                const homeRank = standings[home.id];
+                const awayRank = standings[away.id];
+
+                const prediction = predictWinner(homeRank, awayRank, homeForm, awayForm, home.name, away.name);
+
+                const card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <div class="teams">
+                        <div>
+                            <div class="team-name">${home.name}</div>
+                            <div class="rank">Classement: ${homeRank}</div>
+                            <div class="form">Forme (5 derniers): ${homeForm} pts</div>
+                        </div>
+                        <div>
+                            <div class="date">${date}</div>
+                        </div>
+                        <div>
+                            <div class="team-name">${away.name}</div>
+                            <div class="rank">Classement: ${awayRank}</div>
+                            <div class="form">Forme (5 derniers): ${awayForm} pts</div>
+                        </div>
+                    </div>
+                    <div class="prediction">Prédiction: ${prediction}</div>
+                `;
+                matchesDiv.appendChild(card);
+            }
+        }
+
+        displayMatches();
+    </script>
 </body>
 </html>
