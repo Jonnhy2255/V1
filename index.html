@@ -2,157 +2,2696 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Prédictions Premier League</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestionnaire de Pronostics Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#EEEEFE',
+                            100: '#D1D0FC',
+                            200: '#B3B2FA',
+                            300: '#9594F7',
+                            400: '#7877F5',
+                            500: '#5D5CDE',
+                            600: '#4A49B8',
+                            700: '#383792',
+                            800: '#25246C',
+                            900: '#151446',
+                        },
+                        danger: {
+                            100: '#FFE5E5',
+                            500: '#ff4842',
+                            700: '#B91C1C'
+                        },
+                        success: {
+                            100: '#E6F7E6',
+                            500: '#4caf50',
+                            700: '#15803D'
+                        },
+                        warning: {
+                            100: '#FFF8E6',
+                            500: '#FFC107',
+                            700: '#B45309'
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f6f6f6;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overscroll-behavior: none;
         }
-        h1 {
-            text-align: center;
-            color: #333;
+        
+        /* Animations */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        .match-card {
-            background: #fff;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        .teams {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        .team-name {
-            font-weight: bold;
-            font-size: 18px;
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-        .date {
-            font-size: 14px;
-            color: #777;
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
-        .prediction {
-            margin-top: 10px;
-            font-size: 16px;
-            color: #2a9d8f;
-            font-weight: bold;
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 5px;
+        }
+        
+        .dark .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Loader animation */
+        .loader {
+            animation: spin 1.2s linear infinite;
+        }
+        
+        /* Animations classes */
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-in-out;
+        }
+        
+        .animate-bounce {
+            animation: bounce 1s ease-in-out infinite;
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .card-hover:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            opacity: 0;
+            transition: all 0.3s ease;
+            visibility: hidden;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -30px;
+            white-space: nowrap;
+            font-size: 0.7rem;
+            padding: 5px 10px;
+            border-radius: 4px;
+            z-index: 50;
+            background-color: #222;
+            color: white;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Direct edit mode highlight */
+        .edit-mode {
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.6);
+            transition: all 0.2s ease;
+        }
+        
+        .edit-mode:focus {
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.6);
+        }
+        
+        /* Hide file input */
+        .file-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+        
+        /* Quick edit mode */
+        .quick-edit-field {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .quick-edit-field:hover {
+            background-color: rgba(79, 70, 229, 0.1);
+            border-radius: 4px;
+        }
+        
+        .quick-edit-field.editing {
+            background-color: rgba(79, 70, 229, 0.1);
+            border-radius: 4px;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            border: 1px dashed rgba(79, 70, 229, 0.3);
+        }
+        
+        .dark .quick-edit-field:hover {
+            background-color: rgba(139, 92, 246, 0.2);
+        }
+        
+        .dark .quick-edit-field.editing {
+            background-color: rgba(139, 92, 246, 0.2);
+            border: 1px dashed rgba(139, 92, 246, 0.4);
+        }
+        
+        /* Action bar for forecast cards */
+        .forecast-actions {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+        }
+        
+        .forecast-card:hover .forecast-actions {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
-<body>
-    <h1>Prédictions Premier League</h1>
-    <div id="matches"></div>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white antialiased">
+    <!-- Application Loader -->
+    <div id="app-loader" class="fixed inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-50">
+        <div class="relative w-16 h-16">
+            <div class="absolute inset-0 rounded-full border-4 border-primary-100 dark:border-primary-900"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-primary-500 loader"></div>
+        </div>
+        <p class="mt-6 text-primary-500 text-lg font-medium animate-pulse">Chargement de l'application...</p>
+    </div>
 
-    <script>
-        const API_KEY = '097484f1d09ec785f42ad0be238ffabf';
-        const BASE_URL = 'https://v3.football.api-sports.io';
-        const LEAGUE_ID = 39;
-        const SEASON = 2024;
-
-        const headers = {
-            'x-rapidapi-host': 'v3.football.api-sports.io',
-            'x-rapidapi-key': API_KEY
-        };
-
-        async function getUpcomingMatches() {
-            const res = await fetch(`${BASE_URL}/fixtures?league=${LEAGUE_ID}&season=${SEASON}&next=3`, { headers });
-            const data = await res.json();
-            return data.response;
-        }
-
-        async function getStandings() {
-            const res = await fetch(`${BASE_URL}/standings?league=${LEAGUE_ID}&season=${SEASON}`, { headers });
-            const data = await res.json();
-            const standings = {};
-            data.response[0].league.standings[0].forEach(team => {
-                standings[team.team.id] = team.rank;
-            });
-            return standings;
-        }
-
-        async function getLastMatches(teamId) {
-            const res = await fetch(`${BASE_URL}/fixtures?team=${teamId}&last=5`, { headers });
-            const data = await res.json();
-            return data.response;
-        }
-
-        function calculateForm(matches, teamId) {
-            let points = 0;
-            matches.forEach(match => {
-                const isHome = match.teams.home.id === teamId;
-                const goalsFor = isHome ? match.goals.home : match.goals.away;
-                const goalsAgainst = isHome ? match.goals.away : match.goals.home;
-
-                if (goalsFor > goalsAgainst) points += 3;
-                else if (goalsFor === goalsAgainst) points += 1;
-            });
-            return points;
-        }
-
-        function predictWinner(homeRank, awayRank, homeForm, awayForm, homeName, awayName) {
-            let score = 0;
-            if (homeRank < awayRank) score += 1;
-            else if (homeRank > awayRank) score -=1;
-
-            if (homeForm > awayForm) score +=1;
-            else if (homeForm < awayForm) score -=1;
-
-            if (score > 0) return homeName;
-            else if (score < 0) return awayName;
-            else return 'Match nul';
-        }
-
-        async function displayMatches() {
-            const matchesDiv = document.getElementById('matches');
-            const standings = await getStandings();
-            const matches = await getUpcomingMatches();
-
-            for (const match of matches) {
-                const home = match.teams.home;
-                const away = match.teams.away;
-                const date = new Date(match.fixture.date).toLocaleString('fr-FR');
-
-                const homeLast = await getLastMatches(home.id);
-                const awayLast = await getLastMatches(away.id);
-
-                const homeForm = calculateForm(homeLast, home.id);
-                const awayForm = calculateForm(awayLast, away.id);
-
-                const homeRank = standings[home.id];
-                const awayRank = standings[away.id];
-
-                const prediction = predictWinner(homeRank, awayRank, homeForm, awayForm, home.name, away.name);
-
-                const card = document.createElement('div');
-                card.className = 'match-card';
-                card.innerHTML = `
-                    <div class="teams">
-                        <div>
-                            <div class="team-name">${home.name}</div>
-                            <div class="rank">Classement: ${homeRank}</div>
-                            <div class="form">Forme (5 derniers): ${homeForm} pts</div>
-                        </div>
-                        <div>
-                            <div class="date">${date}</div>
-                        </div>
-                        <div>
-                            <div class="team-name">${away.name}</div>
-                            <div class="rank">Classement: ${awayRank}</div>
-                            <div class="form">Forme (5 derniers): ${awayForm} pts</div>
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="fixed inset-0 bg-white dark:bg-gray-900 z-40 flex items-center justify-center p-4" style="display: none;">
+        <div class="w-full max-w-md">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden animate-fade-in">
+                <div class="p-8 text-center">
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-primary-50 dark:bg-primary-900 mb-6">
+                        <i class="fas fa-chart-line text-primary-500 text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestionnaire de Pronostics</h1>
+                    <p class="text-gray-500 dark:text-gray-400 mt-2">Gérez efficacement vos pronostics sportifs</p>
+                </div>
+                
+                <div class="p-8 pt-0">
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="login-email">Email</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                            </div>
+                            <input id="login-email" type="email" class="py-3 pl-10 pr-3 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base" placeholder="votre@email.com">
                         </div>
                     </div>
-                    <div class="prediction">Prédiction: ${prediction}</div>
-                `;
-                matchesDiv.appendChild(card);
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="login-password">Mot de passe</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input id="login-password" type="password" class="py-3 pl-10 pr-10 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base" placeholder="••••••••">
+                            <button id="toggle-password" type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="auth-error" class="hidden mb-5 p-3 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400 rounded-lg text-sm flex items-start">
+                        <i class="fas fa-exclamation-circle mt-0.5 mr-2"></i>
+                        <span id="auth-error-message"></span>
+                    </div>
+                    
+                    <button id="login-btn" class="w-full flex justify-center items-center px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <span id="login-btn-text">Se connecter</span>
+                        <span id="login-btn-loader" class="hidden ml-2">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
+                
+                <div class="px-8 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+                    <button id="theme-toggle-auth" class="inline-flex items-center px-3 py-1.5 bg-white dark:bg-gray-800 rounded-full shadow-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                        <span class="ml-2 text-sm font-medium dark:hidden">Mode sombre</span>
+                        <span class="ml-2 text-sm font-medium hidden dark:block">Mode clair</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-container" class="hidden flex flex-col min-h-screen">
+        <!-- Network Status -->
+        <div id="network-status" class="hidden px-4 py-2 bg-red-500 text-white text-center text-sm font-medium">
+            <i class="fas fa-wifi-slash mr-2"></i> Connexion perdue — Tentative de reconnexion...
+        </div>
+        
+        <!-- App Layout -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar (desktop) -->
+            <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+                <!-- Sidebar Header -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center">
+                    <div class="bg-primary-50 dark:bg-primary-900 p-2 rounded-lg">
+                        <i class="fas fa-chart-line text-primary-500 text-xl"></i>
+                    </div>
+                    <h1 class="ml-3 font-bold text-gray-900 dark:text-white text-lg">Pronostics PRO</h1>
+                </div>
+                
+                <!-- User Info -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
+                            <span id="user-initials" class="text-primary-600 dark:text-primary-300 font-medium">--</span>
+                        </div>
+                        <div class="ml-3">
+                            <p id="user-email" class="text-sm font-medium text-gray-900 dark:text-white truncate">Chargement...</p>
+                            <div class="flex items-center mt-1">
+                                <span id="user-status" class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                    En ligne
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
+                    <a href="#dashboard" class="nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-home w-5 text-gray-400 mr-2"></i>
+                        <span>Tableau de bord</span>
+                    </a>
+                    <a href="#safes" class="nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-shield-alt w-5 text-gray-400 mr-2"></i>
+                        <span>Safes du jour</span>
+                    </a>
+                    <a href="#exact" class="nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-bullseye w-5 text-gray-400 mr-2"></i>
+                        <span>Scores exacts</span>
+                    </a>
+                    <a href="#ai" class="nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-robot w-5 text-gray-400 mr-2"></i>
+                        <span>Prédictions IA</span>
+                    </a>
+                    
+                    <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                        <h3 class="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Paramètres
+                        </h3>
+                        <div class="mt-2 space-y-1">
+                            <button id="theme-toggle-sidebar" class="w-full flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-moon dark:hidden w-5 text-gray-400 mr-2"></i>
+                                <i class="fas fa-sun hidden dark:block w-5 text-gray-400 mr-2"></i>
+                                <span class="dark:hidden">Mode sombre</span>
+                                <span class="hidden dark:block">Mode clair</span>
+                            </button>
+                            <button id="logout-btn" class="w-full flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-sign-out-alt w-5 text-gray-400 mr-2"></i>
+                                <span>Déconnexion</span>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </aside>
+            
+            <!-- Mobile header and content -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Mobile Header -->
+                <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 md:hidden">
+                    <div class="flex items-center justify-between h-16 px-4">
+                        <div class="flex items-center">
+                            <button id="menu-toggle" class="text-gray-500 dark:text-gray-400 focus:outline-none">
+                                <i class="fas fa-bars text-xl"></i>
+                            </button>
+                            <div class="ml-3 flex items-center">
+                                <i class="fas fa-chart-line text-primary-500 text-lg mr-2"></i>
+                                <span class="font-bold text-gray-900 dark:text-white">Pronostics PRO</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <button id="theme-toggle-mobile" class="text-gray-500 dark:text-gray-400 p-2 focus:outline-none">
+                                <i class="fas fa-moon dark:hidden"></i>
+                                <i class="fas fa-sun hidden dark:block"></i>
+                            </button>
+                            <button id="user-menu-button" class="ml-2 flex items-center text-gray-500 dark:text-gray-400">
+                                <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
+                                    <span id="user-initials-mobile" class="text-primary-600 dark:text-primary-300 text-sm font-medium">--</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Navigation Tabs -->
+                    <div class="flex border-t border-gray-200 dark:border-gray-700">
+                        <a href="#dashboard" class="mobile-tab flex-1 px-3 py-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <i class="fas fa-home block text-lg mb-1 mx-auto"></i>
+                            <span>Accueil</span>
+                        </a>
+                        <a href="#safes" class="mobile-tab flex-1 px-3 py-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <i class="fas fa-shield-alt block text-lg mb-1 mx-auto"></i>
+                            <span>Safes</span>
+                        </a>
+                        <a href="#exact" class="mobile-tab flex-1 px-3 py-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <i class="fas fa-bullseye block text-lg mb-1 mx-auto"></i>
+                            <span>Exacts</span>
+                        </a>
+                        <a href="#ai" class="mobile-tab flex-1 px-3 py-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                            <i class="fas fa-robot block text-lg mb-1 mx-auto"></i>
+                            <span>IA</span>
+                        </a>
+                    </div>
+                </header>
+                
+                <!-- Mobile Menu (Slide-out) -->
+                <div id="mobile-menu" class="fixed inset-0 z-40 hidden">
+                    <div class="absolute inset-0 bg-black/50" id="mobile-menu-backdrop"></div>
+                    <div class="absolute top-0 left-0 w-64 h-full bg-white dark:bg-gray-800 shadow-lg transform transition-transform animate-slide-in">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="bg-primary-50 dark:bg-primary-900 p-2 rounded-lg">
+                                    <i class="fas fa-chart-line text-primary-500 text-xl"></i>
+                                </div>
+                                <h1 class="ml-3 font-bold text-gray-900 dark:text-white text-lg">Pronostics PRO</h1>
+                            </div>
+                            <button id="close-mobile-menu" class="text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
+                                    <span id="user-initials-menu" class="text-primary-600 dark:text-primary-300 font-medium">--</span>
+                                </div>
+                                <div class="ml-3">
+                                    <p id="user-email-menu" class="text-sm font-medium text-gray-900 dark:text-white truncate">Chargement...</p>
+                                    <div class="flex items-center mt-1">
+                                        <span class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                            En ligne
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <nav class="p-4 space-y-1">
+                            <a href="#dashboard" class="mobile-nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-home w-5 text-gray-400 mr-2"></i>
+                                <span>Tableau de bord</span>
+                            </a>
+                            <a href="#safes" class="mobile-nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-shield-alt w-5 text-gray-400 mr-2"></i>
+                                <span>Safes du jour</span>
+                            </a>
+                            <a href="#exact" class="mobile-nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-bullseye w-5 text-gray-400 mr-2"></i>
+                                <span>Scores exacts</span>
+                            </a>
+                            <a href="#ai" class="mobile-nav-link flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-robot w-5 text-gray-400 mr-2"></i>
+                                <span>Prédictions IA</span>
+                            </a>
+                            
+                            <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                                <h3 class="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Paramètres
+                                </h3>
+                                <div class="mt-2 space-y-1">
+                                    <button id="theme-toggle-menu" class="w-full flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <i class="fas fa-moon dark:hidden w-5 text-gray-400 mr-2"></i>
+                                        <i class="fas fa-sun hidden dark:block w-5 text-gray-400 mr-2"></i>
+                                        <span class="dark:hidden">Mode sombre</span>
+                                        <span class="hidden dark:block">Mode clair</span>
+                                    </button>
+                                    <button id="logout-btn-mobile" class="w-full flex items-center px-3 py-2 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <i class="fas fa-sign-out-alt w-5 text-gray-400 mr-2"></i>
+                                        <span>Déconnexion</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+                
+                <!-- Mobile User Menu -->
+                <div id="user-menu" class="fixed inset-0 z-40 hidden">
+                    <div class="absolute inset-0 bg-black/50" id="user-menu-backdrop"></div>
+                    <div class="absolute top-0 right-0 w-64 h-full bg-white dark:bg-gray-800 shadow-lg transform transition-transform animate-slide-in">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <h2 class="font-bold text-gray-900 dark:text-white text-lg">Profil</h2>
+                            <button id="close-user-menu" class="text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="p-4 flex items-center border-b border-gray-200 dark:border-gray-700">
+                            <div class="h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
+                                <span id="user-initials-profile" class="text-primary-600 dark:text-primary-300 text-xl font-medium">--</span>
+                            </div>
+                            <div class="ml-4">
+                                <p id="user-email-profile" class="font-medium text-gray-900 dark:text-white truncate">Chargement...</p>
+                                <div class="flex items-center mt-1">
+                                    <span class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
+                                        Connecté
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4">
+                            <button id="logout-btn-profile" class="w-full flex items-center justify-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg">
+                                <i class="fas fa-sign-out-alt mr-2"></i>
+                                <span>Déconnexion</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Content Area -->
+                <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 custom-scrollbar">
+                    <!-- Dashboard View -->
+                    <section id="dashboard-view" class="p-4 md:p-6 max-w-7xl mx-auto animate-fade-in">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tableau de bord</h1>
+                            <p class="mt-1 text-gray-500 dark:text-gray-400">Gérez et suivez vos pronostics sportifs</p>
+                        </div>
+                        
+                        <!-- Stats Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 card-hover">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg p-3">
+                                        <i class="fas fa-chart-bar text-blue-600 dark:text-blue-400 text-xl"></i>
+                                    </div>
+                                    <div class="ml-5">
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Pronostics</p>
+                                        <div id="total-count" class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 card-hover">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-lg p-3">
+                                        <i class="fas fa-check text-green-600 dark:text-green-400 text-xl"></i>
+                                    </div>
+                                    <div class="ml-5">
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pronostics Gagnés</p>
+                                        <div class="mt-1 flex items-baseline">
+                                            <span id="wins-count" class="text-3xl font-bold text-green-600 dark:text-green-400">--</span>
+                                            <span id="wins-percent" class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 card-hover">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-lg p-3">
+                                        <i class="fas fa-times text-red-600 dark:text-red-400 text-xl"></i>
+                                    </div>
+                                    <div class="ml-5">
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pronostics Perdus</p>
+                                        <div class="mt-1 flex items-baseline">
+                                            <span id="losses-count" class="text-3xl font-bold text-red-600 dark:text-red-400">--</span>
+                                            <span id="losses-percent" class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Add -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden mb-6">
+                            <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                                <h2 class="font-semibold text-gray-900 dark:text-white">Ajouter rapidement un pronostic</h2>
+                            </div>
+                            <div class="p-5">
+                                <form id="quick-add-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                                        <select id="quick-add-type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                            <option value="safes">Safe du jour</option>
+                                            <option value="exact">Score exact</option>
+                                            <option value="ai">Prédiction IA</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Match</label>
+                                        <div class="flex space-x-2">
+                                            <input id="quick-add-home" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Équipe domicile">
+                                            <span class="flex items-center text-gray-500 dark:text-gray-400">vs</span>
+                                            <input id="quick-add-away" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Équipe extérieur">
+                                        </div>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Action</label>
+                                        <button type="submit" id="quick-add-btn" class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 flex items-center justify-center">
+                                            <i class="fas fa-plus mr-2"></i> Ajouter
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Activity & Upcoming Matches -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Recent Activity -->
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                                <div class="px-5 py-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                                    <h2 class="font-semibold text-gray-900 dark:text-white">Activité récente</h2>
+                                    <button id="refresh-activity" class="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-medium">
+                                        <i class="fas fa-sync-alt mr-1"></i> Actualiser
+                                    </button>
+                                </div>
+                                <div id="activity-content" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <div class="p-5 text-center">
+                                        <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-primary-500 mb-2"></div>
+                                        <p class="text-gray-500 dark:text-gray-400">Chargement des activités récentes...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Upcoming Matches -->
+                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+                                <div class="px-5 py-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                                    <h2 class="font-semibold text-gray-900 dark:text-white">Matchs à venir</h2>
+                                    <button id="view-all-matches" class="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-medium">
+                                        Voir tout
+                                    </button>
+                                </div>
+                                <div id="upcoming-content" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <div class="p-5 text-center">
+                                        <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-primary-500 mb-2"></div>
+                                        <p class="text-gray-500 dark:text-gray-400">Chargement des matchs à venir...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Forecast Views: Safes, Exact, and AI -->
+                    <section id="forecasts-view" class="hidden p-4 md:p-6 max-w-7xl mx-auto animate-fade-in">
+                        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 id="view-title" class="text-2xl font-bold text-gray-900 dark:text-white">Safes du jour</h1>
+                                <p id="view-description" class="mt-1 text-gray-500 dark:text-gray-400">Gérez vos pronostics à faible risque</p>
+                            </div>
+                            <button id="add-forecast-btn" class="inline-flex items-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                Ajouter un pronostic
+                            </button>
+                        </div>
+                        
+                        <!-- Search and Filters -->
+                        <div class="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div class="md:col-span-3 relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input id="search-input" type="text" class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Rechercher par équipe, compétition...">
+                            </div>
+                            <div>
+                                <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="all">Tous les statuts</option>
+                                    <option value="pending">À venir</option>
+                                    <option value="win">Gagnés</option>
+                                    <option value="loss">Perdus</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select id="sort-filter" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="date-desc">Date (récent)</option>
+                                    <option value="date-asc">Date (ancien)</option>
+                                    <option value="confidence-desc">Confiance (↑)</option>
+                                    <option value="confidence-asc">Confiance (↓)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Forecasts List Container -->
+                        <div id="forecasts-container">
+                            <!-- Loading State -->
+                            <div id="forecasts-loading" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 text-center">
+                                <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-primary-500 mb-4"></div>
+                                <p class="text-gray-500 dark:text-gray-400 text-lg">Chargement des pronostics...</p>
+                            </div>
+                            
+                            <!-- Empty State -->
+                            <div id="forecasts-empty" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 text-center">
+                                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                                    <i id="empty-icon" class="fas fa-shield-alt text-gray-400 dark:text-gray-500 text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucun pronostic trouvé</h3>
+                                <p id="empty-message" class="text-gray-500 dark:text-gray-400 mb-6">Vous n'avez pas encore créé de pronostic "Safe du jour"</p>
+                                <button class="add-forecast-btn px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-2"></i> Ajouter un pronostic
+                                </button>
+                            </div>
+                            
+                            <!-- Error State -->
+                            <div id="forecasts-error" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 text-center">
+                                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                                    <i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400 text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Erreur de chargement</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mb-6">Impossible de récupérer vos pronostics. Veuillez vérifier votre connexion Internet.</p>
+                                <button id="retry-btn" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors">
+                                    <i class="fas fa-sync-alt mr-2"></i> Réessayer
+                                </button>
+                            </div>
+                            
+                            <!-- Results Grid -->
+                            <div id="forecasts-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+                        </div>
+                        
+                        <!-- Mobile Add Button -->
+                        <div class="md:hidden fixed right-6 bottom-6 z-30">
+                            <button id="mobile-add-btn" class="h-14 w-14 rounded-full bg-primary-500 hover:bg-primary-600 text-white shadow-lg flex items-center justify-center">
+                                <i class="fas fa-plus text-xl"></i>
+                            </button>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="forecast-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20">
+            <!-- Background Overlay -->
+            <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full mx-auto transform transition-all animate-fade-in">
+                <div class="absolute top-3 right-3">
+                    <button id="close-modal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="px-6 pt-6 pb-4">
+                    <h3 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white">Ajouter un pronostic</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Remplissez les champs ci-dessous pour créer un nouveau pronostic</p>
+                </div>
+                
+                <div class="px-6 pb-6">
+                    <form id="forecast-form" class="space-y-4">
+                        <div>
+                            <label for="forecast-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type de pronostic</label>
+                            <select id="forecast-type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="safes">Safe du jour</option>
+                                <option value="exact">Score exact</option>
+                                <option value="ai">Prédiction IA</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="forecast-league" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Compétition</label>
+                            <input id="forecast-league" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: Ligue 1, Premier League...">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="forecast-home" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Équipe domicile</label>
+                                <input id="forecast-home" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: PSG">
+                            </div>
+                            <div>
+                                <label for="forecast-away" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Équipe extérieur</label>
+                                <input id="forecast-away" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: Marseille">
+                            </div>
+                        </div>
+                        
+                        <div id="safes-fields">
+                            <label for="forecast-prediction" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pronostic</label>
+                            <select id="forecast-prediction" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="1">Victoire domicile (1)</option>
+                                <option value="X">Match nul (X)</option>
+                                <option value="2">Victoire extérieur (2)</option>
+                                <option value="1X">Double chance 1X</option>
+                                <option value="X2">Double chance X2</option>
+                                <option value="Over 1.5">Plus de 1.5 buts</option>
+                                <option value="Over 2.5">Plus de 2.5 buts</option>
+                                <option value="Under 2.5">Moins de 2.5 buts</option>
+                                <option value="Under 3.5">Moins de 3.5 buts</option>
+                                <option value="BTTS Yes">Les deux équipes marquent</option>
+                                <option value="BTTS No">Les deux équipes ne marquent pas</option>
+                            </select>
+                        </div>
+                        
+                        <div id="score-fields" class="hidden grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="forecast-home-score" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Score domicile</label>
+                                <input id="forecast-home-score" type="number" min="0" max="20" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: 2">
+                            </div>
+                            <div>
+                                <label for="forecast-away-score" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Score extérieur</label>
+                                <input id="forecast-away-score" type="number" min="0" max="20" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: 1">
+                            </div>
+                        </div>
+                        
+                        <div id="ai-fields" class="hidden">
+                            <label for="forecast-analysis" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Analyse IA</label>
+                            <textarea id="forecast-analysis" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none" placeholder="Entrez l'analyse détaillée fournie par l'IA..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Niveau de confiance</label>
+                            <div class="flex items-center space-x-3">
+                                <input id="forecast-confidence" type="range" min="50" max="100" value="75" class="w-full accent-primary-500">
+                                <span id="confidence-value" class="text-sm font-medium text-gray-700 dark:text-gray-300 w-10 text-center">75%</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="forecast-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date du match</label>
+                            <input id="forecast-date" type="datetime-local" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                        </div>
+                        
+                        <div>
+                            <label for="forecast-status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</label>
+                            <select id="forecast-status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="pending">À venir</option>
+                                <option value="win">Gagné</option>
+                                <option value="loss">Perdu</option>
+                            </select>
+                        </div>
+                        
+                        <div id="result-fields" class="hidden grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="forecast-result-home" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Score final domicile</label>
+                                <input id="forecast-result-home" type="number" min="0" max="20" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: 2">
+                            </div>
+                            <div>
+                                <label for="forecast-result-away" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Score final extérieur</label>
+                                <input id="forecast-result-away" type="number" min="0" max="20" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ex: 1">
+                            </div>
+                        </div>
+                        
+                        <div id="form-error" class="hidden mt-2 p-3 bg-red-50 border border-red-100 text-red-700 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400 rounded-lg text-sm">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span id="error-message"></span>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-xl border-t border-gray-200 dark:border-gray-700 flex justify-between">
+                    <button id="delete-btn" class="hidden px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center">
+                        <i class="fas fa-trash-alt mr-2"></i> Supprimer
+                    </button>
+                    <div class="flex space-x-3">
+                        <button id="cancel-btn" type="button" class="px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg">
+                            Annuler
+                        </button>
+                        <button id="save-btn" type="button" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg flex items-center">
+                            <span id="save-btn-text">Enregistrer</span>
+                            <span id="save-btn-loader" class="hidden ml-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Edit Modal -->
+    <div id="quick-edit-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20">
+            <!-- Background Overlay -->
+            <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-sm w-full mx-auto transform transition-all animate-fade-in">
+                <div class="absolute top-3 right-3">
+                    <button id="close-quick-edit" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="px-6 pt-6 pb-4">
+                    <h3 id="quick-edit-title" class="text-xl font-bold text-gray-900 dark:text-white">Modifier le statut</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Mettez à jour rapidement ce pronostic</p>
+                </div>
+                
+                <div class="px-6 pb-6">
+                    <form id="quick-edit-form" class="space-y-4">
+                        <div>
+                            <div id="quick-edit-info" class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3 mb-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <div id="quick-edit-teams" class="font-medium text-gray-900 dark:text-white">PSG vs OM</div>
+                                    <div id="quick-edit-date" class="text-xs text-gray-500 dark:text-gray-400">12 jan. 21:00</div>
+                                </div>
+                                <div id="quick-edit-prediction" class="text-sm text-gray-600 dark:text-gray-300">Pronostic: 1</div>
+                            </div>
+                            
+                            <label for="quick-edit-status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Statut</label>
+                            <select id="quick-edit-status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="pending">À venir</option>
+                                <option value="win">Gagné</option>
+                                <option value="loss">Perdu</option>
+                            </select>
+                        </div>
+                        
+                        <div id="quick-edit-result-fields" class="hidden">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="quick-edit-home-score" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Score domicile</label>
+                                    <input id="quick-edit-home-score" type="number" min="0" max="20" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                                <div>
+                                    <label for="quick-edit-away-score" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Score extérieur</label>
+                                    <input id="quick-edit-away-score" type="number" min="0" max="20" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="quick-edit-error" class="hidden mt-2 p-3 bg-red-50 border border-red-100 text-red-700 dark:bg-red-900/20 dark:border-red-900/30 dark:text-red-400 rounded-lg text-sm">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span id="quick-error-message"></span>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 rounded-b-xl border-t border-gray-200 dark:border-gray-700 flex justify-between">
+                    <div class="flex space-x-3 w-full">
+                        <button id="quick-edit-cancel" type="button" class="px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg">
+                            Annuler
+                        </button>
+                        <button id="quick-edit-save" type="button" class="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg flex items-center justify-center">
+                            <span id="quick-save-text">Mettre à jour</span>
+                            <span id="quick-save-loader" class="hidden ml-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+        <div class="flex min-h-screen items-center justify-center px-4 pt-4 pb-20">
+            <!-- Background Overlay -->
+            <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+            
+            <!-- Modal Content -->
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-sm w-full mx-auto transform transition-all animate-fade-in">
+                <div class="p-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-500 dark:text-red-400">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-bold text-center text-gray-900 dark:text-white mb-2">Supprimer ce pronostic ?</h3>
+                    <p class="text-center text-gray-500 dark:text-gray-400 mb-6">Cette action est irréversible et toutes les données associées à ce pronostic seront définitivement supprimées.</p>
+                    
+                    <div class="flex space-x-3">
+                        <button id="cancel-delete" class="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600">
+                            Annuler
+                        </button>
+                        <button id="confirm-delete" class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center">
+                            <span id="delete-text">Supprimer</span>
+                            <span id="delete-loader" class="hidden ml-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2"></div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTPLxUiA8lj82kqc6CyCPLQDITc0CtLUE",
+            authDomain: "ichat-betai.firebaseapp.com",
+            databaseURL: "https://ichat-betai-default-rtdb.firebaseio.com",
+            projectId: "ichat-betai",
+            storageBucket: "ichat-betai.appspot.com",
+            messagingSenderId: "168337722600",
+            appId: "1:168337722600:web:beb331f83cc4778c5b4d5d",
+            measurementId: "G-STXPSZN7X8"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global state
+        let currentUser = null;
+        let currentView = 'dashboard';
+        let currentForecastId = null;
+        let isEditMode = false;
+        let isQuickEditMode = false;
+        let activeFilters = {
+            search: '',
+            status: 'all',
+            sort: 'date-desc'
+        };
+        let forecastsData = {
+            safes: [],
+            exact: [],
+            ai: []
+        };
+        let realTimeListeners = {};
+        let isOnline = navigator.onLine;
+
+        // DOM utility functions
+        const $ = selector => document.querySelector(selector);
+        const $$ = selector => document.querySelectorAll(selector);
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup theme toggle functionality
+            setupThemeToggle();
+            
+            // Setup network monitoring
+            setupNetworkMonitoring();
+            
+            // Setup authentication observer
+            setupAuthObserver();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Setup input validations
+            setupFormValidation();
+        });
+
+        // Setup theme toggle functionality
+        function setupThemeToggle() {
+            // Check system preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Listen for system preference changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+            
+            // Add event listeners to theme toggle buttons
+            ['#theme-toggle-auth', '#theme-toggle-sidebar', '#theme-toggle-mobile', '#theme-toggle-menu'].forEach(selector => {
+                const btn = $(selector);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        document.documentElement.classList.toggle('dark');
+                    });
+                }
+            });
+        }
+        
+        // Setup network monitoring
+        function setupNetworkMonitoring() {
+            const updateNetworkStatus = () => {
+                isOnline = navigator.onLine;
+                const statusBar = $('#network-status');
+                
+                if (!isOnline) {
+                    statusBar.classList.remove('hidden');
+                } else {
+                    statusBar.classList.add('hidden');
+                }
+            };
+            
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+            updateNetworkStatus();
+        }
+        
+        // Setup authentication observer
+        function setupAuthObserver() {
+            onAuthStateChanged(auth, user => {
+                // Hide loader
+                $('#app-loader').style.display = 'none';
+                
+                if (user) {
+                    // User is signed in
+                    currentUser = user;
+                    
+                    // Update UI with user info
+                    updateUserInfo(user);
+                    
+                    // Show app, hide login
+                    $('#auth-screen').style.display = 'none';
+                    $('#app-container').classList.remove('hidden');
+                    
+                    // Initialize application
+                    initializeApp();
+                    
+                } else {
+                    // User is signed out
+                    currentUser = null;
+                    
+                    // Show login, hide app
+                    $('#auth-screen').style.display = 'flex';
+                    $('#app-container').classList.add('hidden');
+                    
+                    // Clean up real-time listeners
+                    Object.values(realTimeListeners).forEach(unsubscribe => {
+                        if (typeof unsubscribe === 'function') {
+                            unsubscribe();
+                        }
+                    });
+                    realTimeListeners = {};
+                }
+            });
+        }
+        
+        // Update user information in UI
+        function updateUserInfo(user) {
+            const email = user.email || 'Utilisateur';
+            const initials = getInitials(email);
+            
+            // Update user email displays
+            ['#user-email', '#user-email-menu', '#user-email-profile'].forEach(selector => {
+                const el = $(selector);
+                if (el) el.textContent = email;
+            });
+            
+            // Update user initials displays
+            ['#user-initials', '#user-initials-mobile', '#user-initials-menu', '#user-initials-profile'].forEach(selector => {
+                const el = $(selector);
+                if (el) el.textContent = initials;
+            });
+        }
+        
+        // Get initials from email or name
+        function getInitials(emailOrName) {
+            if (!emailOrName) return '--';
+            
+            if (emailOrName.includes('@')) {
+                emailOrName = emailOrName.split('@')[0];
+            }
+            
+            const parts = emailOrName.split(/[^a-zA-Z]/).filter(p => p);
+            
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            } else if (parts.length === 1) {
+                return parts[0].substring(0, 2).toUpperCase();
+            }
+            
+            return '--';
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login form
+            $('#login-btn').addEventListener('click', () => {
+                const email = $('#login-email').value.trim();
+                const password = $('#login-password').value;
+                loginUser(email, password);
+            });
+            
+            // Toggle password visibility
+            $('#toggle-password').addEventListener('click', () => {
+                const passwordInput = $('#login-password');
+                const passwordType = passwordInput.getAttribute('type');
+                passwordInput.setAttribute('type', passwordType === 'password' ? 'text' : 'password');
+                $('#toggle-password i').classList.toggle('fa-eye');
+                $('#toggle-password i').classList.toggle('fa-eye-slash');
+            });
+            
+            // Enter key in login form
+            $('#login-email').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    $('#login-password').focus();
+                }
+            });
+            
+            $('#login-password').addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    const email = $('#login-email').value.trim();
+                    const password = $('#login-password').value;
+                    loginUser(email, password);
+                }
+            });
+            
+            // Logout buttons
+            ['#logout-btn', '#logout-btn-mobile', '#logout-btn-profile'].forEach(selector => {
+                const btn = $(selector);
+                if (btn) {
+                    btn.addEventListener('click', logoutUser);
+                }
+            });
+            
+            // Mobile menu toggle
+            $('#menu-toggle')?.addEventListener('click', () => {
+                $('#mobile-menu').classList.remove('hidden');
+            });
+            
+            $('#close-mobile-menu')?.addEventListener('click', () => {
+                $('#mobile-menu').classList.add('hidden');
+            });
+            
+            $('#mobile-menu-backdrop')?.addEventListener('click', () => {
+                $('#mobile-menu').classList.add('hidden');
+            });
+            
+            // User menu toggle
+            $('#user-menu-button')?.addEventListener('click', () => {
+                $('#user-menu').classList.remove('hidden');
+            });
+            
+            $('#close-user-menu')?.addEventListener('click', () => {
+                $('#user-menu').classList.add('hidden');
+            });
+            
+            $('#user-menu-backdrop')?.addEventListener('click', () => {
+                $('#user-menu').classList.add('hidden');
+            });
+            
+            // Navigation
+            $$('.nav-link, .mobile-tab, .mobile-nav-link').forEach(link => {
+                link.addEventListener('click', e => {
+                    e.preventDefault();
+                    const view = link.getAttribute('href').substring(1);
+                    navigateTo(view);
+                    
+                    // Close mobile menus
+                    $('#mobile-menu').classList.add('hidden');
+                });
+            });
+            
+            // Handle hash changes
+            window.addEventListener('hashchange', () => {
+                const view = window.location.hash.substring(1) || 'dashboard';
+                navigateTo(view);
+            });
+            
+            // Search and filters
+            $('#search-input')?.addEventListener('input', debounce(e => {
+                activeFilters.search = e.target.value.toLowerCase().trim();
+                applyFilters();
+            }, 300));
+            
+            $('#status-filter')?.addEventListener('change', e => {
+                activeFilters.status = e.target.value;
+                applyFilters();
+            });
+            
+            $('#sort-filter')?.addEventListener('change', e => {
+                activeFilters.sort = e.target.value;
+                applyFilters();
+            });
+            
+            // Add forecast buttons
+            $('#add-forecast-btn, #mobile-add-btn')?.addEventListener('click', () => {
+                openAddModal();
+            });
+            
+            // Dashboard quick add form
+            $('#quick-add-form')?.addEventListener('submit', e => {
+                e.preventDefault();
+                
+                const type = $('#quick-add-type').value;
+                const homeTeam = $('#quick-add-home').value.trim();
+                const awayTeam = $('#quick-add-away').value.trim();
+                
+                if (homeTeam && awayTeam) {
+                    openQuickAddModal(type, homeTeam, awayTeam);
+                } else {
+                    showToast('Veuillez saisir les deux équipes', 'error');
+                }
+            });
+            
+            // Retry button for error state
+            $('#retry-btn')?.addEventListener('click', () => {
+                setupRealTimeListener(currentView);
+            });
+            
+            // Forecast form
+            setupForecastForm();
+            
+            // Quick edit form
+            setupQuickEditForm();
+            
+            // Delete confirmation
+            setupDeleteConfirmation();
+        }
+        
+        // Initialize application
+        function initializeApp() {
+            // Navigate to view from URL hash or default to dashboard
+            const initialView = window.location.hash.substring(1) || 'dashboard';
+            navigateTo(initialView);
+        }
+        
+        // Navigate to view
+        function navigateTo(view) {
+            // Default to dashboard for invalid views
+            if (!['dashboard', 'safes', 'exact', 'ai'].includes(view)) {
+                view = 'dashboard';
+            }
+            
+            // Update current view
+            currentView = view;
+            
+            // Update URL hash without triggering hashchange event
+            const currentHash = window.location.hash.substring(1);
+            if (currentHash !== view) {
+                history.pushState(null, null, `#${view}`);
+            }
+            
+            // Update navigation UI
+            updateNavigationUI(view);
+            
+            // Show/hide appropriate views
+            if (view === 'dashboard') {
+                $('#dashboard-view').classList.remove('hidden');
+                $('#forecasts-view').classList.add('hidden');
+                
+                // Load dashboard data
+                loadDashboardData();
+            } else {
+                $('#dashboard-view').classList.add('hidden');
+                $('#forecasts-view').classList.remove('hidden');
+                
+                // Update view title and description
+                updateViewInfo(view);
+                
+                // Setup real-time data listener
+                setupRealTimeListener(view);
             }
         }
-
-        displayMatches();
+        
+        // Update navigation UI based on active view
+        function updateNavigationUI(view) {
+            // Desktop navigation
+            $$('.nav-link').forEach(link => {
+                const linkView = link.getAttribute('href').substring(1);
+                
+                if (linkView === view) {
+                    link.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+                    link.classList.remove('text-gray-700', 'dark:text-gray-300');
+                } else {
+                    link.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+                    link.classList.add('text-gray-700', 'dark:text-gray-300');
+                }
+            });
+            
+            // Mobile tabs
+            $$('.mobile-tab').forEach(tab => {
+                const tabView = tab.getAttribute('href').substring(1);
+                
+                if (tabView === view) {
+                    tab.classList.add('text-primary-500', 'border-b-2', 'border-primary-500');
+                    tab.classList.remove('text-gray-500', 'dark:text-gray-400');
+                } else {
+                    tab.classList.remove('text-primary-500', 'border-b-2', 'border-primary-500');
+                    tab.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
+            });
+            
+            // Mobile menu navigation
+            $$('.mobile-nav-link').forEach(link => {
+                const linkView = link.getAttribute('href').substring(1);
+                
+                if (linkView === view) {
+                    link.classList.add('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+                    link.classList.remove('text-gray-700', 'dark:text-gray-300');
+                } else {
+                    link.classList.remove('bg-primary-50', 'dark:bg-primary-900/30', 'text-primary-600', 'dark:text-primary-400');
+                    link.classList.add('text-gray-700', 'dark:text-gray-300');
+                }
+            });
+        }
+        
+        // Update view title and description based on current view
+        function updateViewInfo(view) {
+            const titleElement = $('#view-title');
+            const descriptionElement = $('#view-description');
+            
+            if (!titleElement || !descriptionElement) return;
+            
+            switch (view) {
+                case 'safes':
+                    titleElement.textContent = 'Safes du jour';
+                    descriptionElement.textContent = 'Gérez vos pronostics à faible risque';
+                    break;
+                case 'exact':
+                    titleElement.textContent = 'Scores exacts';
+                    descriptionElement.textContent = 'Suivez vos prédictions de scores précis';
+                    break;
+                case 'ai':
+                    titleElement.textContent = 'Prédictions IA';
+                    descriptionElement.textContent = 'Pronostics basés sur l\'intelligence artificielle';
+                    break;
+                default:
+                    titleElement.textContent = 'Pronostics';
+                    descriptionElement.textContent = 'Gérez tous vos pronostics sportifs';
+            }
+            
+            // Update empty state icon and message
+            const emptyIcon = $('#empty-icon');
+            const emptyMessage = $('#empty-message');
+            
+            if (emptyIcon && emptyMessage) {
+                switch (view) {
+                    case 'safes':
+                        emptyIcon.className = 'fas fa-shield-alt text-gray-400 dark:text-gray-500 text-2xl';
+                        emptyMessage.textContent = 'Vous n\'avez pas encore créé de pronostic "Safe du jour"';
+                        break;
+                    case 'exact':
+                        emptyIcon.className = 'fas fa-bullseye text-gray-400 dark:text-gray-500 text-2xl';
+                        emptyMessage.textContent = 'Vous n\'avez pas encore créé de pronostic "Score exact"';
+                        break;
+                    case 'ai':
+                        emptyIcon.className = 'fas fa-robot text-gray-400 dark:text-gray-500 text-2xl';
+                        emptyMessage.textContent = 'Vous n\'avez pas encore créé de pronostic "Prédiction IA"';
+                        break;
+                }
+            }
+        }
+        
+        // Setup forecast form event listeners
+        function setupForecastForm() {
+            // Type change
+            $('#forecast-type')?.addEventListener('change', updateForecastFormFields);
+            
+            // Status change
+            $('#forecast-status')?.addEventListener('change', updateForecastFormFields);
+            
+            // Confidence range
+            $('#forecast-confidence')?.addEventListener('input', e => {
+                $('#confidence-value').textContent = `${e.target.value}%`;
+            });
+            
+            // Close modal buttons
+            ['#close-modal', '#cancel-btn'].forEach(selector => {
+                $(selector)?.addEventListener('click', () => {
+                    $('#forecast-modal').classList.add('hidden');
+                });
+            });
+            
+            // Delete button
+            $('#delete-btn')?.addEventListener('click', () => {
+                $('#forecast-modal').classList.add('hidden');
+                $('#delete-modal').classList.remove('hidden');
+            });
+            
+            // Save button
+            $('#save-btn')?.addEventListener('click', saveForecast);
+        }
+        
+        // Setup quick edit form
+        function setupQuickEditForm() {
+            // Status change
+            $('#quick-edit-status')?.addEventListener('change', e => {
+                const status = e.target.value;
+                $('#quick-edit-result-fields').style.display = status === 'pending' ? 'none' : 'block';
+            });
+            
+            // Close modal buttons
+            ['#close-quick-edit', '#quick-edit-cancel'].forEach(selector => {
+                $(selector)?.addEventListener('click', () => {
+                    $('#quick-edit-modal').classList.add('hidden');
+                });
+            });
+            
+            // Save button
+            $('#quick-edit-save')?.addEventListener('click', saveQuickEdit);
+        }
+        
+        // Setup delete confirmation
+        function setupDeleteConfirmation() {
+            // Cancel delete
+            $('#cancel-delete')?.addEventListener('click', () => {
+                $('#delete-modal').classList.add('hidden');
+                
+                // Return to edit modal if in edit mode
+                if (isEditMode) {
+                    $('#forecast-modal').classList.remove('hidden');
+                }
+            });
+            
+            // Confirm delete
+            $('#confirm-delete')?.addEventListener('click', deleteForecast);
+        }
+        
+        // Update forecast form fields based on type and status
+        function updateForecastFormFields() {
+            const type = $('#forecast-type').value;
+            const status = $('#forecast-status').value;
+            
+            // Show/hide type-specific fields
+            $('#safes-fields').style.display = type === 'safes' ? 'block' : 'none';
+            $('#score-fields').style.display = type !== 'safes' ? 'block' : 'none';
+            $('#ai-fields').style.display = type === 'ai' ? 'block' : 'none';
+            
+            // Show/hide result fields based on status
+            $('#result-fields').style.display = status === 'pending' ? 'none' : 'block';
+        }
+        
+        // Setup form validation
+        function setupFormValidation() {
+            // Nothing specific needed yet
+        }
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            // Set loading states
+            $('#activity-content').innerHTML = `
+                <div class="p-5 text-center">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-primary-500 mb-2"></div>
+                    <p class="text-gray-500 dark:text-gray-400">Chargement des activités récentes...</p>
+                </div>
+            `;
+            
+            $('#upcoming-content').innerHTML = `
+                <div class="p-5 text-center">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-primary-500 mb-2"></div>
+                    <p class="text-gray-500 dark:text-gray-400">Chargement des matchs à venir...</p>
+                </div>
+            `;
+            
+            try {
+                // Get all forecasts
+                const forecastsRef = collection(db, "forecasts");
+                const snapshot = await getDocs(forecastsRef);
+                
+                // Process data
+                let totalCount = 0;
+                let winCount = 0;
+                let lossCount = 0;
+                let recentActivity = [];
+                let upcomingMatches = [];
+                
+                snapshot.forEach(doc => {
+                    const forecast = {
+                        id: doc.id,
+                        ...doc.data()
+                    };
+                    
+                    // Update statistics
+                    totalCount++;
+                    if (forecast.status === 'win') winCount++;
+                    if (forecast.status === 'loss') lossCount++;
+                    
+                    // Add to appropriate lists
+                    if (forecast.status !== 'pending') {
+                        recentActivity.push(forecast);
+                    } else {
+                        upcomingMatches.push(forecast);
+                    }
+                });
+                
+                // Update counters
+                $('#total-count').textContent = totalCount;
+                $('#wins-count').textContent = winCount;
+                $('#losses-count').textContent = lossCount;
+                
+                // Calculate percentages
+                const winPercent = totalCount > 0 ? Math.round((winCount / totalCount) * 100) : 0;
+                const lossPercent = totalCount > 0 ? Math.round((lossCount / totalCount) * 100) : 0;
+                
+                $('#wins-percent').textContent = `${winPercent}%`;
+                $('#losses-percent').textContent = `${lossPercent}%`;
+                
+                // Sort recent activity and upcoming matches
+                recentActivity.sort((a, b) => {
+                    const dateA = a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || a.date);
+                    const dateB = b.updatedAt?.toDate ? b.updatedAt.toDate() : new Date(b.updatedAt || b.date);
+                    return dateB - dateA;
+                });
+                
+                upcomingMatches.sort((a, b) => {
+                    const dateA = a.date?.toDate ? a.date.toDate() : new Date(a.date);
+                    const dateB = b.date?.toDate ? b.date.toDate() : new Date(b.date);
+                    return dateA - dateB;
+                });
+                
+                // Limit results
+                recentActivity = recentActivity.slice(0, 5);
+                upcomingMatches = upcomingMatches.slice(0, 5);
+                
+                // Render recent activity
+                renderRecentActivity(recentActivity);
+                
+                // Render upcoming matches
+                renderUpcomingMatches(upcomingMatches);
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                
+                // Show error states
+                $('#activity-content').innerHTML = `
+                    <div class="p-5 text-center">
+                        <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Erreur de chargement</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Vérifiez votre connexion et réessayez</p>
+                    </div>
+                `;
+                
+                $('#upcoming-content').innerHTML = `
+                    <div class="p-5 text-center">
+                        <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Erreur de chargement</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Vérifiez votre connexion et réessayez</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render recent activity
+        function renderRecentActivity(activities) {
+            if (!activities || activities.length === 0) {
+                $('#activity-content').innerHTML = `
+                    <div class="p-5 text-center">
+                        <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                            <i class="fas fa-history text-gray-400 dark:text-gray-500 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucune activité récente</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Les résultats de vos pronostics apparaîtront ici</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = activities.map(activity => {
+                // Format date
+                const date = activity.updatedAt?.toDate ? activity.updatedAt.toDate() : new Date(activity.updatedAt || activity.date);
+                const formattedDate = formatDate(date);
+                
+                // Status info
+                const statusClass = activity.status === 'win' 
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
+                
+                const statusIcon = activity.status === 'win' ? 'fa-check' : 'fa-times';
+                const statusText = activity.status === 'win' ? 'Gagné' : 'Perdu';
+                
+                // Prediction display
+                let predictionHtml = '';
+                if (activity.type === 'safes') {
+                    predictionHtml = `<span class="font-medium">${activity.prediction}</span>`;
+                } else {
+                    predictionHtml = `<span class="font-medium">${activity.homeScore || 0}-${activity.awayScore || 0}</span>`;
+                    
+                    if (activity.resultHomeScore !== undefined) {
+                        predictionHtml += ` <span class="text-gray-500 dark:text-gray-400">(Résultat: ${activity.resultHomeScore}-${activity.resultAwayScore})</span>`;
+                    }
+                }
+                
+                return `
+                    <div class="p-4 flex items-center" data-id="${activity.id}">
+                        <div class="flex-shrink-0">
+                            <div class="h-10 w-10 rounded-full ${statusClass} flex items-center justify-center">
+                                <i class="fas ${statusIcon}"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <div class="flex justify-between items-center">
+                                <div class="font-medium text-gray-900 dark:text-white">${activity.homeTeam} vs ${activity.awayTeam}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</div>
+                            </div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                ${predictionHtml} · <span>${statusText}</span>
+                            </div>
+                        </div>
+                        <button class="quick-edit-btn p-2 ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            $('#activity-content').innerHTML = html;
+            
+            // Add quick edit functionality
+            $$('#activity-content .quick-edit-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const forecastId = e.target.closest('[data-id]').getAttribute('data-id');
+                    const forecast = activities.find(f => f.id === forecastId);
+                    
+                    if (forecast) {
+                        openEditModal(forecast);
+                    }
+                });
+            });
+        }
+        
+        // Render upcoming matches
+        function renderUpcomingMatches(matches) {
+            if (!matches || matches.length === 0) {
+                $('#upcoming-content').innerHTML = `
+                    <div class="p-5 text-center">
+                        <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                            <i class="fas fa-calendar text-gray-400 dark:text-gray-500 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucun match à venir</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Ajoutez des pronostics pour voir vos prochains matchs</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const now = new Date();
+            
+            const html = matches.map(match => {
+                // Format date
+                const matchDate = match.date?.toDate ? match.date.toDate() : new Date(match.date);
+                const formattedDate = formatDate(matchDate);
+                
+                // Time remaining
+                const timeRemaining = getTimeRemaining(now, matchDate);
+                
+                // Prediction display
+                let predictionHtml = '';
+                if (match.type === 'safes') {
+                    predictionHtml = `<div class="font-medium">${match.prediction}</div>`;
+                } else {
+                    predictionHtml = `<div class="font-medium">${match.homeScore || 0}-${match.awayScore || 0}</div>`;
+                }
+                
+                // Type icon
+                const typeIcon = match.type === 'safes' ? 'fa-shield-alt' : match.type === 'exact' ? 'fa-bullseye' : 'fa-robot';
+                
+                return `
+                    <div class="p-4 flex items-center" data-id="${match.id}">
+                        <div class="flex-shrink-0">
+                            <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <i class="fas ${typeIcon}"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <div class="flex justify-between items-center">
+                                <div class="font-medium text-gray-900 dark:text-white">${match.homeTeam} vs ${match.awayTeam}</div>
+                                <div class="text-xs text-amber-500 dark:text-amber-400">${timeRemaining}</div>
+                            </div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300 flex justify-between items-center mt-1">
+                                <span>${match.league || 'Compétition non précisée'}</span>
+                                ${predictionHtml}
+                            </div>
+                        </div>
+                        <button class="edit-match-btn p-2 ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            $('#upcoming-content').innerHTML = html;
+            
+            // Add edit functionality
+            $$('#upcoming-content .edit-match-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const forecastId = e.target.closest('[data-id]').getAttribute('data-id');
+                    const forecast = matches.find(f => f.id === forecastId);
+                    
+                    if (forecast) {
+                        openEditModal(forecast);
+                    }
+                });
+            });
+        }
+        
+        // Setup real-time listener for forecasts
+        function setupRealTimeListener(forecastType) {
+            // Remove existing listener
+            if (realTimeListeners[forecastType]) {
+                realTimeListeners[forecastType]();
+                delete realTimeListeners[forecastType];
+            }
+            
+            // Show loading state
+            $('#forecasts-loading').classList.remove('hidden');
+            $('#forecasts-empty').classList.add('hidden');
+            $('#forecasts-error').classList.add('hidden');
+            $('#forecasts-grid').classList.add('hidden');
+            
+            try {
+                // Create Firestore query
+                const forecastsRef = collection(db, "forecasts");
+                const q = query(
+                    forecastsRef, 
+                    where("type", "==", forecastType)
+                );
+                
+                // Set up listener
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    // Reset data for current type
+                    forecastsData[forecastType] = [];
+                    
+                    // Process snapshot
+                    snapshot.forEach(doc => {
+                        forecastsData[forecastType].push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    
+                    // Apply filters and render
+                    applyFilters();
+                    
+                }, error => {
+                    console.error(`Error getting ${forecastType} forecasts:`, error);
+                    
+                    // Show error state
+                    $('#forecasts-loading').classList.add('hidden');
+                    $('#forecasts-empty').classList.add('hidden');
+                    $('#forecasts-error').classList.remove('hidden');
+                    $('#forecasts-grid').classList.add('hidden');
+                });
+                
+                // Store unsubscribe function
+                realTimeListeners[forecastType] = unsubscribe;
+                
+            } catch (error) {
+                console.error(`Error setting up listener for ${forecastType}:`, error);
+                
+                // Show error state
+                $('#forecasts-loading').classList.add('hidden');
+                $('#forecasts-empty').classList.add('hidden');
+                $('#forecasts-error').classList.remove('hidden');
+                $('#forecasts-grid').classList.add('hidden');
+            }
+        }
+        
+        // Apply filters and render forecasts
+        function applyFilters() {
+            const forecasts = [...forecastsData[currentView] || []];
+            
+            // Apply search filter
+            let filtered = forecasts;
+            if (activeFilters.search) {
+                const search = activeFilters.search.toLowerCase();
+                filtered = filtered.filter(f => 
+                    (f.homeTeam && f.homeTeam.toLowerCase().includes(search)) ||
+                    (f.awayTeam && f.awayTeam.toLowerCase().includes(search)) ||
+                    (f.league && f.league.toLowerCase().includes(search)) ||
+                    (f.type === 'ai' && f.analysis && f.analysis.toLowerCase().includes(search))
+                );
+            }
+            
+            // Apply status filter
+            if (activeFilters.status !== 'all') {
+                filtered = filtered.filter(f => f.status === activeFilters.status);
+            }
+            
+            // Apply sorting
+            filtered = sortForecasts(filtered, activeFilters.sort);
+            
+            // Render filtered forecasts
+            renderForecasts(filtered);
+        }
+        
+        // Sort forecasts based on selected order
+        function sortForecasts(forecasts, order) {
+            return [...forecasts].sort((a, b) => {
+                switch (order) {
+                    case 'date-desc':
+                        const dateA1 = a.date?.toDate ? a.date.toDate() : new Date(a.date || 0);
+                        const dateB1 = b.date?.toDate ? b.date.toDate() : new Date(b.date || 0);
+                        return dateB1 - dateA1;
+                    
+                    case 'date-asc':
+                        const dateA2 = a.date?.toDate ? a.date.toDate() : new Date(a.date || 0);
+                        const dateB2 = b.date?.toDate ? b.date.toDate() : new Date(b.date || 0);
+                        return dateA2 - dateB2;
+                        
+                    case 'confidence-desc':
+                        return (b.confidence || 0) - (a.confidence || 0);
+                        
+                    case 'confidence-asc':
+                        return (a.confidence || 0) - (b.confidence || 0);
+                        
+                    default:
+                        return 0;
+                }
+            });
+        }
+        
+        // Render forecasts
+        function renderForecasts(forecasts) {
+            // Hide loading state
+            $('#forecasts-loading').classList.add('hidden');
+            
+            // Show empty state if no forecasts
+            if (!forecasts || forecasts.length === 0) {
+                $('#forecasts-empty').classList.remove('hidden');
+                $('#forecasts-grid').classList.add('hidden');
+                return;
+            }
+            
+            // Render forecasts
+            $('#forecasts-empty').classList.add('hidden');
+            $('#forecasts-grid').classList.remove('hidden');
+            
+            const grid = $('#forecasts-grid');
+            grid.innerHTML = forecasts.map(forecast => createForecastCard(forecast)).join('');
+            
+            // Add event listeners to edit buttons
+            $$('#forecasts-grid .forecast-edit-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const forecastId = btn.closest('.forecast-card').getAttribute('data-id');
+                    const forecast = forecasts.find(f => f.id === forecastId);
+                    
+                    if (forecast) {
+                        openEditModal(forecast);
+                    }
+                });
+            });
+            
+            // Add event listeners to delete buttons
+            $$('#forecasts-grid .forecast-delete-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const forecastId = btn.closest('.forecast-card').getAttribute('data-id');
+                    const forecast = forecasts.find(f => f.id === forecastId);
+                    
+                    if (forecast) {
+                        currentForecastId = forecast.id;
+                        $('#delete-modal').classList.remove('hidden');
+                    }
+                });
+            });
+            
+            // Add event listeners to status change
+            $$('#forecasts-grid .forecast-status-btn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const forecastId = btn.closest('.forecast-card').getAttribute('data-id');
+                    const forecast = forecasts.find(f => f.id === forecastId);
+                    
+                    if (forecast) {
+                        openQuickEditModal(forecast);
+                    }
+                });
+            });
+            
+            // Add event listeners to card click (edit)
+            $$('#forecasts-grid .forecast-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const forecastId = card.getAttribute('data-id');
+                    const forecast = forecasts.find(f => f.id === forecastId);
+                    
+                    if (forecast) {
+                        openEditModal(forecast);
+                    }
+                });
+            });
+        }
+        
+        // Create HTML for a forecast card
+        function createForecastCard(forecast) {
+            // Status styling
+            let statusClass, statusBgClass, statusIcon, statusText;
+            
+            switch (forecast.status) {
+                case 'win':
+                    statusClass = 'text-green-600 dark:text-green-400';
+                    statusBgClass = 'bg-green-100 dark:bg-green-900/30';
+                    statusIcon = 'fa-check';
+                    statusText = 'Gagné';
+                    break;
+                case 'loss':
+                    statusClass = 'text-red-600 dark:text-red-400';
+                    statusBgClass = 'bg-red-100 dark:bg-red-900/30';
+                    statusIcon = 'fa-times';
+                    statusText = 'Perdu';
+                    break;
+                default:
+                    statusClass = 'text-amber-600 dark:text-amber-400';
+                    statusBgClass = 'bg-amber-100 dark:bg-amber-900/30';
+                    statusIcon = 'fa-clock';
+                    statusText = 'À venir';
+            }
+            
+            // Format date
+            const date = forecast.date?.toDate ? forecast.date.toDate() : new Date(forecast.date);
+            const formattedDate = formatDate(date);
+            
+            // Check if date is past
+            const isPast = new Date() > date && forecast.status === 'pending';
+            
+            // Prediction content
+            let predictionHtml = '';
+            
+            if (forecast.type === 'safes') {
+                predictionHtml = `
+                    <div class="mb-3 p-2 ${statusBgClass} rounded-lg">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 text-center">Pronostic</div>
+                        <div class="font-medium text-center ${statusClass}">${forecast.prediction || '-'}</div>
+                    </div>
+                `;
+            } else {
+                predictionHtml = `
+                    <div class="mb-3 p-2 ${statusBgClass} rounded-lg">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 text-center">Score prédit</div>
+                        <div class="font-medium text-center ${statusClass}">${forecast.homeScore || 0} - ${forecast.awayScore || 0}</div>
+                    </div>
+                `;
+                
+                // Add result if available
+                if (forecast.status !== 'pending' && forecast.resultHomeScore !== undefined) {
+                    predictionHtml += `
+                        <div class="mb-3 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 text-center">Score final</div>
+                            <div class="font-medium text-center">${forecast.resultHomeScore} - ${forecast.resultAwayScore}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // AI analysis
+            let analysisHtml = '';
+            if (forecast.type === 'ai' && forecast.analysis) {
+                analysisHtml = `
+                    <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Analyse IA</div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">${forecast.analysis}</p>
+                    </div>
+                `;
+            }
+            
+            // Past match alert
+            const alertHtml = isPast ? `
+                <div class="absolute top-2 right-2">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                    </span>
+                </div>
+            ` : '';
+            
+            return `
+                <div class="forecast-card relative bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden cursor-pointer card-hover" data-id="${forecast.id}">
+                    ${alertHtml}
+                    
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">${forecast.league || 'Compétition'}</div>
+                            <button class="forecast-status-btn px-2 py-1 rounded-full text-xs font-medium ${statusBgClass} ${statusClass}">
+                                <i class="fas ${statusIcon} mr-1"></i>
+                                ${statusText}
+                            </button>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="text-center flex-1">
+                                <div class="font-semibold text-gray-900 dark:text-white">${forecast.homeTeam || '?'}</div>
+                            </div>
+                            <div class="text-center mx-2 px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-xs text-gray-500 dark:text-gray-400">VS</div>
+                            <div class="text-center flex-1">
+                                <div class="font-semibold text-gray-900 dark:text-white">${forecast.awayTeam || '?'}</div>
+                            </div>
+                        </div>
+                        
+                        ${predictionHtml}
+                        
+                        <div class="flex items-center justify-between text-sm mb-1">
+                            <span class="text-gray-500 dark:text-gray-400">Confiance</span>
+                            <span class="font-medium text-gray-900 dark:text-white">${forecast.confidence || 75}%</span>
+                        </div>
+                        <div class="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary-500" style="width: ${forecast.confidence || 75}%"></div>
+                        </div>
+                        
+                        ${analysisHtml}
+                        
+                        <div class="mt-4 pt-2 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                <i class="far fa-calendar-alt mr-1"></i> ${formattedDate}
+                            </div>
+                            
+                            <div class="forecast-actions flex space-x-1">
+                                <button class="forecast-edit-btn p-1.5 text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-full tooltip" data-tooltip="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="forecast-delete-btn p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full tooltip" data-tooltip="Supprimer">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Open add forecast modal
+        function openAddModal() {
+            // Reset form
+            $('#forecast-form').reset();
+            
+            // Set modal title
+            $('#modal-title').textContent = 'Ajouter un pronostic';
+            
+            // Hide delete button
+            $('#delete-btn').classList.add('hidden');
+            
+            // Set default type
+            $('#forecast-type').value = currentView === 'dashboard' ? 'safes' : currentView;
+            
+            // Set default date (now + 2 hours)
+            const now = new Date();
+            now.setHours(now.getHours() + 2);
+            const formattedDate = now.toISOString().slice(0, 16); // Format for datetime-local input
+            $('#forecast-date').value = formattedDate;
+            
+            // Update visibility of fields
+            updateForecastFormFields();
+            
+            // Hide error message
+            $('#form-error').classList.add('hidden');
+            
+            // Show modal
+            $('#forecast-modal').classList.remove('hidden');
+            
+            // Reset edit mode and forecast ID
+            isEditMode = false;
+            currentForecastId = null;
+        }
+        
+        // Open quick add modal
+        function openQuickAddModal(type, homeTeam, awayTeam) {
+            // Reset form and open edit modal
+            $('#forecast-form').reset();
+            
+            // Set modal title
+            $('#modal-title').textContent = 'Ajouter un pronostic rapide';
+            
+            // Hide delete button
+            $('#delete-btn').classList.add('hidden');
+            
+            // Set form values
+            $('#forecast-type').value = type;
+            $('#forecast-home').value = homeTeam;
+            $('#forecast-away').value = awayTeam;
+            
+            // Set default date (now + 2 hours)
+            const now = new Date();
+            now.setHours(now.getHours() + 2);
+            const formattedDate = now.toISOString().slice(0, 16); // Format for datetime-local input
+            $('#forecast-date').value = formattedDate;
+            
+            // Update visibility of fields
+            updateForecastFormFields();
+            
+            // Hide error message
+            $('#form-error').classList.add('hidden');
+            
+            // Show modal
+            $('#forecast-modal').classList.remove('hidden');
+            
+            // Reset edit mode and forecast ID
+            isEditMode = false;
+            currentForecastId = null;
+        }
+        
+        // Open edit forecast modal
+        function openEditModal(forecast) {
+            // Reset form
+            $('#forecast-form').reset();
+            
+            // Set modal title
+            $('#modal-title').textContent = 'Modifier le pronostic';
+            
+            // Show delete button
+            $('#delete-btn').classList.remove('hidden');
+            
+            // Set form values
+            $('#forecast-type').value = forecast.type || 'safes';
+            $('#forecast-league').value = forecast.league || '';
+            $('#forecast-home').value = forecast.homeTeam || '';
+            $('#forecast-away').value = forecast.awayTeam || '';
+            $('#forecast-confidence').value = forecast.confidence || 75;
+            $('#confidence-value').textContent = `${forecast.confidence || 75}%`;
+            $('#forecast-status').value = forecast.status || 'pending';
+            
+            // Type-specific fields
+            if (forecast.type === 'safes') {
+                $('#forecast-prediction').value = forecast.prediction || '1';
+            } else {
+                $('#forecast-home-score').value = forecast.homeScore || 0;
+                $('#forecast-away-score').value = forecast.awayScore || 0;
+                
+                if (forecast.type === 'ai' && forecast.analysis) {
+                    $('#forecast-analysis').value = forecast.analysis;
+                }
+            }
+            
+            // Result fields
+            if (forecast.status !== 'pending' && forecast.resultHomeScore !== undefined) {
+                $('#forecast-result-home').value = forecast.resultHomeScore;
+                $('#forecast-result-away').value = forecast.resultAwayScore;
+            }
+            
+            // Format date
+            if (forecast.date) {
+                const date = forecast.date.toDate ? forecast.date.toDate() : new Date(forecast.date);
+                const formattedDate = date.toISOString().slice(0, 16); // Format for datetime-local input
+                $('#forecast-date').value = formattedDate;
+            }
+            
+            // Update visibility of fields
+            updateForecastFormFields();
+            
+            // Hide error message
+            $('#form-error').classList.add('hidden');
+            
+            // Show modal
+            $('#forecast-modal').classList.remove('hidden');
+            
+            // Set edit mode and forecast ID
+            isEditMode = true;
+            currentForecastId = forecast.id;
+        }
+        
+        // Open quick edit modal
+        function openQuickEditModal(forecast) {
+            // Set modal info
+            $('#quick-edit-teams').textContent = `${forecast.homeTeam} vs ${forecast.awayTeam}`;
+            
+            // Format date
+            const date = forecast.date?.toDate ? forecast.date.toDate() : new Date(forecast.date);
+            $('#quick-edit-date').textContent = formatDate(date);
+            
+            // Set prediction text
+            if (forecast.type === 'safes') {
+                $('#quick-edit-prediction').textContent = `Pronostic: ${forecast.prediction}`;
+            } else {
+                $('#quick-edit-prediction').textContent = `Score: ${forecast.homeScore || 0}-${forecast.awayScore || 0}`;
+            }
+            
+            // Set current status
+            $('#quick-edit-status').value = forecast.status || 'pending';
+            
+            // Result scores if any
+            if (forecast.resultHomeScore !== undefined) {
+                $('#quick-edit-home-score').value = forecast.resultHomeScore;
+                $('#quick-edit-away-score').value = forecast.resultAwayScore;
+            }
+            
+            // Update result fields visibility
+            $('#quick-edit-result-fields').style.display = forecast.status === 'pending' ? 'none' : 'block';
+            
+            // Hide error message
+            $('#quick-edit-error').classList.add('hidden');
+            
+            // Show modal
+            $('#quick-edit-modal').classList.remove('hidden');
+            
+            // Set quick edit mode and forecast ID
+            isQuickEditMode = true;
+            currentForecastId = forecast.id;
+        }
+        
+        // Save forecast
+        async function saveForecast() {
+            try {
+                // Show loading state
+                $('#save-btn-text').classList.add('hidden');
+                $('#save-btn-loader').classList.remove('hidden');
+                $('#form-error').classList.add('hidden');
+                
+                // Get form values
+                const type = $('#forecast-type').value;
+                const league = $('#forecast-league').value.trim();
+                const homeTeam = $('#forecast-home').value.trim();
+                const awayTeam = $('#forecast-away').value.trim();
+                const confidence = parseInt($('#forecast-confidence').value);
+                const status = $('#forecast-status').value;
+                const dateInput = $('#forecast-date').value;
+                
+                // Validation
+                if (!league || !homeTeam || !awayTeam || !dateInput) {
+                    throw new Error('Veuillez remplir tous les champs obligatoires (compétition, équipes, date)');
+                }
+                
+                // Create forecast data object
+                const forecastData = {
+                    type,
+                    league,
+                    homeTeam,
+                    awayTeam,
+                    confidence,
+                    status,
+                    date: new Date(dateInput)
+                };
+                
+                // Type-specific fields
+                if (type === 'safes') {
+                    forecastData.prediction = $('#forecast-prediction').value;
+                } else {
+                    forecastData.homeScore = parseInt($('#forecast-home-score').value) || 0;
+                    forecastData.awayScore = parseInt($('#forecast-away-score').value) || 0;
+                    
+                    if (type === 'ai') {
+                        forecastData.analysis = $('#forecast-analysis').value.trim();
+                    }
+                }
+                
+                // Result fields if status is not pending
+                if (status !== 'pending') {
+                    forecastData.resultHomeScore = parseInt($('#forecast-result-home').value) || 0;
+                    forecastData.resultAwayScore = parseInt($('#forecast-result-away').value) || 0;
+                }
+                
+                // Add or update in Firestore
+                if (isEditMode && currentForecastId) {
+                    // Edit mode
+                    const forecastRef = doc(db, 'forecasts', currentForecastId);
+                    
+                    // Add timestamp
+                    forecastData.updatedAt = serverTimestamp();
+                    
+                    await updateDoc(forecastRef, forecastData);
+                    showToast('Pronostic mis à jour avec succès', 'success');
+                } else {
+                    // Add mode
+                    const forecastsRef = collection(db, 'forecasts');
+                    
+                    // Add timestamps
+                    forecastData.createdAt = serverTimestamp();
+                    forecastData.updatedAt = serverTimestamp();
+                    
+                    await addDoc(forecastsRef, forecastData);
+                    showToast('Pronostic ajouté avec succès', 'success');
+                }
+                
+                // Close modal
+                $('#forecast-modal').classList.add('hidden');
+                
+                // If current view is dashboard, reload it
+                if (currentView === 'dashboard') {
+                    loadDashboardData();
+                }
+                
+            } catch (error) {
+                console.error('Error saving forecast:', error);
+                
+                // Show error message
+                $('#form-error').classList.remove('hidden');
+                $('#error-message').textContent = error.message || 'Une erreur est survenue lors de l\'enregistrement';
+                
+            } finally {
+                // Hide loading state
+                $('#save-btn-text').classList.remove('hidden');
+                $('#save-btn-loader').classList.add('hidden');
+            }
+        }
+        
+        // Save quick edit
+        async function saveQuickEdit() {
+            try {
+                // Show loading state
+                $('#quick-save-text').classList.add('hidden');
+                $('#quick-save-loader').classList.remove('hidden');
+                $('#quick-edit-error').classList.add('hidden');
+                
+                // Validation
+                if (!currentForecastId) {
+                    throw new Error('Erreur: pronostic non trouvé');
+                }
+                
+                // Get form values
+                const status = $('#quick-edit-status').value;
+                
+                // Create update data
+                const updateData = {
+                    status,
+                    updatedAt: serverTimestamp()
+                };
+                
+                // Add result if status is not pending
+                if (status !== 'pending') {
+                    updateData.resultHomeScore = parseInt($('#quick-edit-home-score').value) || 0;
+                    updateData.resultAwayScore = parseInt($('#quick-edit-away-score').value) || 0;
+                }
+                
+                // Update in Firestore
+                const forecastRef = doc(db, 'forecasts', currentForecastId);
+                await updateDoc(forecastRef, updateData);
+                
+                // Show success message
+                showToast('Statut mis à jour avec succès', 'success');
+                
+                // Close modal
+                $('#quick-edit-modal').classList.add('hidden');
+                
+                // If current view is dashboard, reload it
+                if (currentView === 'dashboard') {
+                    loadDashboardData();
+                }
+                
+            } catch (error) {
+                console.error('Error updating status:', error);
+                
+                // Show error message
+                $('#quick-edit-error').classList.remove('hidden');
+                $('#quick-error-message').textContent = error.message || 'Une erreur est survenue lors de la mise à jour';
+                
+            } finally {
+                // Hide loading state
+                $('#quick-save-text').classList.remove('hidden');
+                $('#quick-save-loader').classList.add('hidden');
+                
+                // Reset state
+                isQuickEditMode = false;
+                currentForecastId = null;
+            }
+        }
+        
+        // Delete forecast
+        async function deleteForecast() {
+            try {
+                // Show loading state
+                $('#delete-text').classList.add('hidden');
+                $('#delete-loader').classList.remove('hidden');
+                
+                // Validation
+                if (!currentForecastId) {
+                    throw new Error('Erreur: pronostic non trouvé');
+                }
+                
+                // Delete from Firestore
+                const forecastRef = doc(db, 'forecasts', currentForecastId);
+                await deleteDoc(forecastRef);
+                
+                // Show success message
+                showToast('Pronostic supprimé avec succès', 'success');
+                
+                // Close modals
+                $('#delete-modal').classList.add('hidden');
+                $('#forecast-modal').classList.add('hidden');
+                
+                // If current view is dashboard, reload it
+                if (currentView === 'dashboard') {
+                    loadDashboardData();
+                }
+                
+            } catch (error) {
+                console.error('Error deleting forecast:', error);
+                showToast('Erreur lors de la suppression', 'error');
+                
+            } finally {
+                // Hide loading state
+                $('#delete-text').classList.remove('hidden');
+                $('#delete-loader').classList.add('hidden');
+                
+                // Reset state
+                isEditMode = false;
+                isQuickEditMode = false;
+                currentForecastId = null;
+            }
+        }
+        
+        // Login user
+        async function loginUser(email, password) {
+            try {
+                // Show loading state
+                $('#login-btn-text').classList.add('hidden');
+                $('#login-btn-loader').classList.remove('hidden');
+                $('#auth-error').classList.add('hidden');
+                
+                // Sign in with Firebase
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                currentUser = userCredential.user;
+                
+                // Success message will be shown after auth state change
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Handle common auth errors
+                let errorMessage;
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorMessage = 'Email invalide';
+                        break;
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage = 'Email ou mot de passe incorrect';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Trop de tentatives de connexion. Veuillez réessayer plus tard';
+                        break;
+                    default:
+                        errorMessage = error.message || 'Erreur de connexion';
+                }
+                
+                // Show error message
+                $('#auth-error').classList.remove('hidden');
+                $('#auth-error-message').textContent = errorMessage;
+                
+            } finally {
+                // Hide loading state
+                $('#login-btn-text').classList.remove('hidden');
+                $('#login-btn-loader').classList.add('hidden');
+            }
+        }
+        
+        // Logout user
+        async function logoutUser() {
+            try {
+                // Sign out from Firebase
+                await signOut(auth);
+                
+                // Reset state
+                currentUser = null;
+                isEditMode = false;
+                isQuickEditMode = false;
+                currentForecastId = null;
+                forecastsData = { safes: [], exact: [], ai: [] };
+                
+                // Clean up listeners
+                Object.values(realTimeListeners).forEach(unsubscribe => {
+                    if (typeof unsubscribe === 'function') {
+                        unsubscribe();
+                    }
+                });
+                realTimeListeners = {};
+                
+                // Show success message
+                showToast('Déconnexion réussie', 'info');
+                
+                // UI changes will happen in auth observer
+                
+            } catch (error) {
+                console.error('Logout error:', error);
+                showToast('Erreur lors de la déconnexion', 'error');
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success', duration = 4000) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `mb-3 py-3 px-4 rounded-lg shadow-lg max-w-xs animate-slide-up text-white flex items-center`;
+            
+            // Set color based on type
+            switch (type) {
+                case 'success':
+                    toast.classList.add('bg-green-500');
+                    toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>`;
+                    break;
+                case 'error':
+                    toast.classList.add('bg-red-500');
+                    toast.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i>`;
+                    break;
+                case 'warning':
+                    toast.classList.add('bg-amber-500');
+                    toast.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>`;
+                    break;
+                case 'info':
+                default:
+                    toast.classList.add('bg-blue-500');
+                    toast.innerHTML = `<i class="fas fa-info-circle mr-2"></i>`;
+            }
+            
+            // Add message
+            toast.innerHTML += `<span class="mr-2">${message}</span>`;
+            
+            // Add close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'ml-auto text-white opacity-70 hover:opacity-100';
+            closeBtn.innerHTML = `<i class="fas fa-times"></i>`;
+            closeBtn.onclick = () => {
+                removeToast(toast);
+            };
+            
+            toast.appendChild(closeBtn);
+            
+            // Add to container
+            $('#toast-container').appendChild(toast);
+            
+            // Auto remove after duration
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+        
+        // Remove toast with animation
+        function removeToast(toast) {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+        
+        // Format date
+        function formatDate(date) {
+            if (!date) return 'Date inconnue';
+            
+            try {
+                return date.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return 'Date invalide';
+            }
+        }
+        
+        // Get readable time remaining
+        function getTimeRemaining(now, target) {
+            const diffMs = target - now;
+            
+            // Past date
+            if (diffMs < 0) {
+                return 'Terminé';
+            }
+            
+            const diffSeconds = Math.floor(diffMs / 1000);
+            const diffMinutes = Math.floor(diffSeconds / 60);
+            const diffHours = Math.floor(diffMinutes / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMinutes < 60) {
+                return `Dans ${diffMinutes} min`;
+            } else if (diffHours < 24) {
+                return `Dans ${diffHours}h`;
+            } else {
+                return `Dans ${diffDays}j`;
+            }
+        }
+        
+        // Debounce function for search input
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
     </script>
 </body>
 </html>
